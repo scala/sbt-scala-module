@@ -8,7 +8,7 @@ provide hooks for using the partest testing framework.
 
 You must be using sbt 0.13 for your projects.  First create a `project/plugins.sbt` files:
 
-    addSbtPlugin("org.scala-lang.modules" % "scala-module-plugin" % "0.1")
+    addSbtPlugin("org.scala-lang.modules" % "scala-module-plugin" % "0.2")
 
 Then, in your `build.sbt` add:
 
