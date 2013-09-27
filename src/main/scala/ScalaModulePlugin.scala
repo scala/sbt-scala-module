@@ -71,8 +71,8 @@ object ScalaModulePlugin extends Plugin {
       // so that it can link to the compiler/lib we're using (testing)
       libraryDependencies ++= (
         if (includeTestDependencies.value)
-          Seq("org.scala-lang.modules" %% "scala-partest"           % partestVersion.value % "test",
-              "org.scala-lang.modules" %% "scala-partest-interface" % "0.2"     % "test")
+          Seq("org.scala-lang.modules" %% "scala-partest-interface" % "0.2"                % "test",
+              "org.scala-lang.modules" %% "scala-partest"           % partestVersion.value % "test")
         else Seq.empty
       ),
       // necessary for partest -- see comments in its build.sbt
