@@ -11,7 +11,7 @@ object ScalaModulePlugin extends Plugin {
       partestVersion := "1.0-RC5",
       organization := "org.scala-lang.modules",
       // don't use for doc scope, scaladoc warnings are not to be reckoned with
-      scalacOptions in compile ++= Seq("-optimize", "-Xfatal-warnings", "-feature", "-deprecation", "-unchecked", "-Xlint"),
+      scalacOptions in (Compile, compile) ++= Seq("-optimize", "-Xfatal-warnings", "-feature", "-deprecation", "-unchecked", "-Xlint"),
       // Generate $name.properties to store our version as well as the scala version used to build
       resourceGenerators in Compile <+= Def.task {
         val props = new java.util.Properties
