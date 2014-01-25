@@ -12,9 +12,6 @@ object ScalaModulePlugin extends Plugin {
     case sv => sbt.CrossVersion.binaryScalaVersion(sv)
   }
 
-  // a setting-transform to turn the regular version into something osgi can deal with
-  val osgiVersion = version(_.replace('-', '.'))
-
   lazy val scalaModuleSettings = Seq(
     repoName            := name.value,
 
@@ -78,8 +75,13 @@ object ScalaModulePlugin extends Plugin {
           <name>Typesafe, Inc.</name>
         </developer>
       </developers>
-    ),
+    )
+  )
 
+  // a setting-transform to turn the regular version into something osgi can deal with
+  val osgiVersion = version(_.replace('-', '.'))
+
+  lazy val scalaModuleOsgiSettings = SbtOsgi.osgiSettings ++ Seq(
     OsgiKeys.bundleSymbolicName  := s"${organization.value}.${name.value}",
     OsgiKeys.bundleVersion       := osgiVersion.value,
 
@@ -90,13 +92,14 @@ object ScalaModulePlugin extends Plugin {
                           ("Bundle-Version", osgiVersion.value),
                           ("Eclipse-SourceBundle", s"""${organization.value}.${name.value};version="${osgiVersion.value}";roots:="."""")
                       ))
-
-
-    // TODO: mima
-    // resolvers += Classpaths.typesafeResolver
-    // addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.5")
-    // import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
-    // import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
-    // previousArtifact := Some(organization.value %% name.value % binaryReferenceVersion.value)
   )
+
+
+
+  // TODO: mima
+  // resolvers += Classpaths.typesafeResolver
+  // addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.5")
+  // import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
+  // import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
+  // previousArtifact := Some(organization.value %% name.value % binaryReferenceVersion.value)
 }
