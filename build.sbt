@@ -1,13 +1,18 @@
-git.baseVersion := "1.0"
+git.baseVersion   := "1.0.0"
 
 versionWithGit
 
-name := "scala-module-plugin"
+name              := "scala-module-plugin"
 
-organization := "org.scala-lang.modules"
+organization      := "org.scala-lang.modules"
 
-sbtPlugin := true
+sbtPlugin         := true
 
-publishTo := Some(Resolver.url("sbt-plugin-releases", new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns))
+publishTo         := Some(if (version.value.trim.endsWith("SNAPSHOT")) Classpaths.sbtPluginSnapshots else Classpaths.sbtPluginReleases)
 
 publishMavenStyle := false
+
+resolvers         += Classpaths.sbtPluginReleases
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.7.0")
+
