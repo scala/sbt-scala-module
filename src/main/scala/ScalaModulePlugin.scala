@@ -25,6 +25,8 @@ object ScalaModulePlugin extends Plugin {
     // to allow compiling against snapshot versions of Scala
     resolvers += Resolver.sonatypeRepo("snapshots"),
 
+    // resolvers += "scala-release-temp" at "http://private-repo.typesafe.com/typesafe/scala-release-temp/"
+
     // don't use for doc scope, scaladoc warnings are not to be reckoned with
     // TODO: turn on for nightlies, but don't enable for PR validation... "-Xfatal-warnings"
     scalacOptions in compile ++= Seq("-optimize", "-feature", "-deprecation", "-unchecked", "-Xlint"),
@@ -43,6 +45,13 @@ object ScalaModulePlugin extends Plugin {
     mappings in (Compile, packageBin) += {
        (baseDirectory.value / s"${name.value}.properties") -> s"${name.value}.properties"
     },
+
+    // needed to fix classloader issues (see scala/scala-xml#20)
+    // essentially, the problem is that the run-time bootclasspath leaks into the compilation classpath,
+    // so that scalac see classes used to run it, as classes used to compile against...
+    // forking uses a minimal classpath, so this craziness is avoided
+    // alternatively, manage the scala instance as shown at the end of this file (commented)
+    fork in Test := true,
 
     publishArtifact in Test := false,
 
@@ -103,3 +112,16 @@ object ScalaModulePlugin extends Plugin {
   // import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
   // previousArtifact := Some(organization.value %% name.value % binaryReferenceVersion.value)
 }
+
+
+// ALTERNATIVE to fork in test for fixing classpath issues noted above:
+// manage the Scala instance ourselves to exclude the published scala-xml (scala-compiler depends on it)
+// since this dependency hides the classes we're testing
+// managedScalaInstance := false
+//
+// ivyConfigurations    += Configurations.ScalaTool
+//
+// libraryDependencies ++= Seq(
+//    "org.scala-lang" % "scala-library" % scalaVersion.value,
+//    ("org.scala-lang" % "scala-compiler" % scalaVersion.value % "scala-tool").exclude("org.scala-lang.modules", s"scala-xml_${scalaBinaryVersion.value}")
+// )
