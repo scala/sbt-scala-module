@@ -102,15 +102,6 @@ object ScalaModulePlugin extends Plugin {
                           ("Eclipse-SourceBundle", s"""${organization.value}.${name.value};version="${osgiVersion.value}";roots:="."""")
                       ))
   )
-
-
-
-  // TODO: mima
-  // resolvers += Classpaths.typesafeResolver
-  // addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.5")
-  // import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
-  // import com.typesafe.tools.mima.plugin.MimaKeys.previousArtifact
-  // previousArtifact := Some(organization.value %% name.value % binaryReferenceVersion.value)
 }
 
 
@@ -125,3 +116,12 @@ object ScalaModulePlugin extends Plugin {
 //    "org.scala-lang" % "scala-library" % scalaVersion.value,
 //    ("org.scala-lang" % "scala-compiler" % scalaVersion.value % "scala-tool").exclude("org.scala-lang.modules", s"scala-xml_${scalaBinaryVersion.value}")
 // )
+
+
+/* Mima blurb:
+  addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.6")
+
+  import com.typesafe.tools.mima.plugin.{MimaPlugin, MimaKeys}
+  MimaPlugin.mimaDefaultSettings
+  MimaKeys.previousArtifact := Some(... % ... % ...)
+*/
