@@ -6,11 +6,11 @@ object ScalaModulePlugin extends Plugin {
   val snapshotScalaBinaryVersion = settingKey[String]("The Scala binary version to use when building against Scala SNAPSHOT.")
   val repoName                   = settingKey[String]("The name of the repository under github.com/scala/.")
 
-  def deriveBinaryVersion(sv: String, snapshotScalaBinaryVersion: String) = sv match {
-    case snap_211 if snap_211.startsWith("2.11") &&
-                     snap_211.contains("-SNAPSHOT") => snapshotScalaBinaryVersion
-    case sv => sbt.CrossVersion.binaryScalaVersion(sv)
-  }
+  def deriveBinaryVersion(sv: String, snapshotScalaBinaryVersion: String) =
+    if (sv.startsWith("2.12") && sv.contains("-SNAPSHOT")) // TODO this is brittle around the release of a major version
+      snapshotScalaBinaryVersion
+    else
+      sbt.CrossVersion.binaryScalaVersion(sv)
 
   lazy val scalaModuleSettings = Seq(
     repoName            := name.value,
