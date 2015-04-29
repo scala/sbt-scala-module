@@ -30,3 +30,5 @@ bintrayOrganization in bintray := None
 
 // this plugin depends on the sbt-osgi plugin -- 2-for-1!
 addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.7.0")
+
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.6")
