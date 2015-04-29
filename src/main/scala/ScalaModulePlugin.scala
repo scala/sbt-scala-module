@@ -1,23 +1,21 @@
 import sbt._
 import Keys._
 import com.typesafe.sbt.osgi.{OsgiKeys, SbtOsgi}
+import com.typesafe.tools.mima.plugin.{MimaPlugin, MimaKeys}
 
 object ScalaModulePlugin extends Plugin {
-  val snapshotScalaBinaryVersion = settingKey[String]("The Scala binary version to use when building against Scala SNAPSHOT.")
   val repoName                   = settingKey[String]("The name of the repository under github.com/scala/.")
+  val mimaPreviousVersion        = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
 
-  def deriveBinaryVersion(sv: String, snapshotScalaBinaryVersion: String) = sv match {
-    case snap_211 if snap_211.startsWith("2.11") &&
-                     snap_211.contains("-SNAPSHOT") => snapshotScalaBinaryVersion
-    case sv => sbt.CrossVersion.binaryScalaVersion(sv)
-  }
+  private val canRunMima         = taskKey[Boolean]("Decides if MiMa should run.")
+  private val runMimaIfEnabled   = taskKey[Unit]("Run MiMa if mimaPreviousVersion and the module can be resolved against the current scalaBinaryVersion.")
 
-  lazy val scalaModuleSettings = Seq(
+  lazy val scalaModuleSettings: Seq[Setting[_]] = Seq(
     repoName            := name.value,
 
-    organization        := "org.scala-lang.modules",
+    mimaPreviousVersion := None,
 
-    scalaBinaryVersion  := deriveBinaryVersion(scalaVersion.value, snapshotScalaBinaryVersion.value),
+    organization        := "org.scala-lang.modules",
 
     // so we don't have to wait for sonatype to synch to maven central when deploying a new module
     resolvers += Resolver.sonatypeRepo("releases"),
@@ -85,6 +83,57 @@ object ScalaModulePlugin extends Plugin {
         </developer>
       </developers>
     )
+  ) ++ mimaSettings
+
+  // adapted from https://github.com/typesafehub/migration-manager/blob/0.1.6/sbtplugin/src/main/scala/com/typesafe/tools/mima/plugin/SbtMima.scala#L69
+  def artifactExists(organization: String, name: String, scalaBinaryVersion: String, version: String, ivy: IvySbt, s: TaskStreams): Boolean = {
+    val moduleId = new ModuleID(organization, s"${name}_$scalaBinaryVersion", version)
+    val moduleSettings = InlineConfiguration(
+      "dummy" % "test" % "version",
+      ModuleInfo("dummy-test-project-for-resolving"),
+      dependencies = Seq(moduleId))
+    val ivyModule = new ivy.Module(moduleSettings)
+    try {
+      IvyActions.update(
+        ivyModule,
+        new UpdateConfiguration(
+          retrieve = None,
+          missingOk = false,
+          logging = UpdateLogging.DownloadOnly),
+        s.log)
+      true
+    } catch {
+      case _: ResolveException => false
+    }
+  }
+
+  lazy val mimaSettings: Seq[Setting[_]] = MimaPlugin.mimaDefaultSettings ++ Seq(
+    // manual cross-versioning because https://github.com/typesafehub/migration-manager/issues/62
+    MimaKeys.previousArtifact := Some(organization.value % s"${name.value}_${scalaBinaryVersion.value}" % mimaPreviousVersion.value.getOrElse("dummy")),
+
+    canRunMima := {
+      val mimaVer = mimaPreviousVersion.value
+      val s = streams.value
+      if (mimaVer.isEmpty) {
+        s.log.warn("MiMa will NOT run because no mimaPreviousVersion is provided.")
+        false
+      } else if (!artifactExists(organization.value, name.value, scalaBinaryVersion.value, mimaVer.get, ivySbt.value, s)) {
+        s.log.warn(s"""MiMa will NOT run because the previous artifact "${organization.value}" % "${name.value}_${scalaBinaryVersion.value}" % "${mimaVer.get}" could not be resolved (note the binary Scala version).""")
+        false
+      } else {
+        true
+      }
+    },
+
+    runMimaIfEnabled := Def.taskDyn({
+      if(canRunMima.value) Def.task { MimaKeys.reportBinaryIssues.value }
+      else Def.task { () }
+    }).value,
+
+    test in Test := {
+      runMimaIfEnabled.value
+      (test in Test).value
+    }
   )
 
   // a setting-transform to turn the regular version into something osgi can deal with
@@ -116,12 +165,3 @@ object ScalaModulePlugin extends Plugin {
 //    "org.scala-lang" % "scala-library" % scalaVersion.value,
 //    ("org.scala-lang" % "scala-compiler" % scalaVersion.value % "scala-tool").exclude("org.scala-lang.modules", s"scala-xml_${scalaBinaryVersion.value}")
 // )
-
-
-/* Mima blurb:
-  addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.6")
-
-  import com.typesafe.tools.mima.plugin.{MimaPlugin, MimaKeys}
-  MimaPlugin.mimaDefaultSettings
-  MimaKeys.previousArtifact := Some(... % ... % ...)
-*/
