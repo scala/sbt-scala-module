@@ -4,18 +4,11 @@ import com.typesafe.sbt.osgi.{OsgiKeys, SbtOsgi}
 import com.typesafe.tools.mima.plugin.{MimaPlugin, MimaKeys}
 
 object ScalaModulePlugin extends Plugin {
-  val snapshotScalaBinaryVersion = settingKey[String]("The Scala binary version to use when building against Scala SNAPSHOT.")
   val repoName                   = settingKey[String]("The name of the repository under github.com/scala/.")
   val mimaPreviousVersion        = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
 
   private val canRunMima         = taskKey[Boolean]("Decides if MiMa should run.")
   private val runMimaIfEnabled   = taskKey[Unit]("Run MiMa if mimaPreviousVersion and the module can be resolved against the current scalaBinaryVersion.")
-
-  def deriveBinaryVersion(sv: String, snapshotScalaBinaryVersion: String) = sv match {
-    case snap_211 if snap_211.startsWith("2.11") &&
-                     snap_211.contains("-SNAPSHOT") => snapshotScalaBinaryVersion
-    case sv => sbt.CrossVersion.binaryScalaVersion(sv)
-  }
 
   lazy val scalaModuleSettings: Seq[Setting[_]] = Seq(
     repoName            := name.value,
@@ -23,8 +16,6 @@ object ScalaModulePlugin extends Plugin {
     mimaPreviousVersion := None,
 
     organization        := "org.scala-lang.modules",
-
-    scalaBinaryVersion  := deriveBinaryVersion(scalaVersion.value, snapshotScalaBinaryVersion.value),
 
     // so we don't have to wait for sonatype to synch to maven central when deploying a new module
     resolvers += Resolver.sonatypeRepo("releases"),
