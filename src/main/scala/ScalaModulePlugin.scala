@@ -58,7 +58,10 @@ object ScalaModulePlugin extends Plugin {
       if (version.value.trim.endsWith("SNAPSHOT")) Resolver.sonatypeRepo("snapshots")
       else Opts.resolver.sonatypeStaging
     ),
-    credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+    credentials ++= {
+      val file = Path.userHome / ".ivy2" / ".credentials"
+      if (file.exists) List(file) else Nil
+    },
 
     publishMavenStyle    := true,
     scmInfo              := Some(ScmInfo(url(s"https://github.com/scala/${repoName.value}"),s"scm:git:git://github.com/scala/${repoName.value}.git")),
