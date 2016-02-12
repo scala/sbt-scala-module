@@ -60,7 +60,7 @@ object ScalaModulePlugin extends Plugin {
     ),
     credentials ++= {
       val file = Path.userHome / ".ivy2" / ".credentials"
-      if (file.exists) List(file) else Nil
+      if (file.exists) List(new FileCredentials(file)) else Nil
     },
 
     publishMavenStyle    := true,
