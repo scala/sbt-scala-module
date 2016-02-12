@@ -29,6 +29,9 @@ repository in bintray          := "sbt-plugins"
 bintrayOrganization in bintray := None
 
 // this plugin depends on the sbt-osgi plugin -- 2-for-1!
+// TODO update to 0.8.0
+//      this might require us to modify the downstream project to enable the AutoPlugin
+//      See code changes and docs: https://github.com/sbt/sbt-osgi/commit/e3625e685b8d1784938ec66067d629251811a9d1
 addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.7.0")
 
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.6")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.8")
