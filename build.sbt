@@ -1,5 +1,3 @@
-import bintray.Keys._
-
 git.baseVersion   := "1.0.0"
 
 versionWithGit
@@ -18,15 +16,13 @@ sbtPlugin         := true
 
 publishMavenStyle := false
 
-bintrayPublishSettings
-
 resolvers         += Classpaths.sbtPluginReleases
 
 licenses          := Seq("BSD" -> url("http://opensource.org/licenses/BSD"))
 
-repository in bintray          := "sbt-plugins"
+bintrayRepository := "sbt-plugins"
 
-bintrayOrganization in bintray := None
+bintrayOrganization := None
 
 // this plugin depends on the sbt-osgi plugin -- 2-for-1!
 // TODO update to 0.8.0
