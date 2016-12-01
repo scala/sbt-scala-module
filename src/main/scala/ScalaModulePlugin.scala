@@ -1,7 +1,7 @@
 import sbt._
 import Keys._
 import com.typesafe.sbt.osgi.{OsgiKeys, SbtOsgi}
-import com.typesafe.tools.mima.plugin.{MimaPlugin, MimaKeys}
+import com.typesafe.tools.mima.plugin.{MimaPlugin, MimaKeys}, MimaKeys._
 
 object ScalaModulePlugin extends Plugin {
   val repoName                   = settingKey[String]("The name of the repository under github.com/scala/.")
@@ -30,7 +30,7 @@ object ScalaModulePlugin extends Plugin {
     scalacOptions in compile ++= Seq("-optimize", "-feature", "-deprecation", "-unchecked", "-Xlint"),
 
     // Generate $name.properties to store our version as well as the scala version used to build
-    resourceGenerators in Compile <+= Def.task {
+    resourceGenerators in Compile += Def.task {
       val props = new java.util.Properties
       props.put("version.number", version.value)
       props.put("scala.version.number", scalaVersion.value)
@@ -38,7 +38,7 @@ object ScalaModulePlugin extends Plugin {
       val file = (resourceManaged in Compile).value / s"${name.value}.properties"
       IO.write(props, null, file)
       Seq(file)
-    },
+    }.taskValue,
 
     mappings in (Compile, packageBin) += {
        (baseDirectory.value / s"${name.value}.properties") -> s"${name.value}.properties"
@@ -112,7 +112,7 @@ object ScalaModulePlugin extends Plugin {
 
   lazy val mimaSettings: Seq[Setting[_]] = MimaPlugin.mimaDefaultSettings ++ Seq(
     // manual cross-versioning because https://github.com/typesafehub/migration-manager/issues/62
-    MimaKeys.previousArtifact := Some(organization.value % s"${name.value}_${scalaBinaryVersion.value}" % mimaPreviousVersion.value.getOrElse("dummy")),
+    mimaPreviousArtifacts := Set(organization.value % s"${name.value}_${scalaBinaryVersion.value}" % mimaPreviousVersion.value.getOrElse("dummy")),
 
     canRunMima := {
       val mimaVer = mimaPreviousVersion.value
@@ -129,7 +129,7 @@ object ScalaModulePlugin extends Plugin {
     },
 
     runMimaIfEnabled := Def.taskDyn({
-      if(canRunMima.value) Def.task { MimaKeys.reportBinaryIssues.value }
+      if(canRunMima.value) Def.task { mimaReportBinaryIssues.value }
       else Def.task { () }
     }).value,
 
