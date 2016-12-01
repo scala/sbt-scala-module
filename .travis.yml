@@ -1,0 +1,26 @@
+# opt-in to Travis's newer/faster container-based infrastructure
+sudo: false
+
+language: scala
+
+jdk:
+  - openjdk6
+
+# cache stuff, hopefully shortening build times
+cache:
+  directories:
+  - $HOME/.ivy2
+  - $HOME/.sbt/boot
+  - $HOME/.sbt/launchers
+
+script:
+  - sbt test
+
+before_cache:
+  - find $HOME/.sbt -name "*.lock" | xargs rm
+  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+
+notifications:
+  email:
+  - adriaan.moors@lightbend.com
+  - seth.tisue@lightbend.com
