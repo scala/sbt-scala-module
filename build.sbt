@@ -30,4 +30,4 @@ bintrayOrganization := None
 //      See code changes and docs: https://github.com/sbt/sbt-osgi/commit/e3625e685b8d1784938ec66067d629251811a9d1
 addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.7.0")
 
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.12")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.13")
