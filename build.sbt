@@ -22,7 +22,7 @@ licenses          := Seq("BSD" -> url("http://opensource.org/licenses/BSD"))
 
 bintrayRepository := "sbt-plugins"
 
-bintrayOrganization := Some("typesafe")
+bintrayOrganization := None
 
 // this plugin depends on the sbt-osgi plugin -- 2-for-1!
 // TODO update to 0.8.0
