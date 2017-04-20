@@ -20,11 +20,6 @@ object ScalaModulePlugin extends Plugin {
     // so we don't have to wait for sonatype to synch to maven central when deploying a new module
     resolvers += Resolver.sonatypeRepo("releases"),
 
-    // to allow compiling against snapshot versions of Scala
-    resolvers += Resolver.sonatypeRepo("snapshots"),
-
-    // resolvers += "scala-release-temp" at "http://private-repo.typesafe.com/typesafe/scala-release-temp/"
-
     // don't use for doc scope, scaladoc warnings are not to be reckoned with
     // TODO: turn on for nightlies, but don't enable for PR validation... "-Xfatal-warnings"
     scalacOptions in compile ++= Seq("-optimize", "-feature", "-deprecation", "-unchecked", "-Xlint"),
