@@ -72,17 +72,17 @@ object ScalaModulePlugin extends Plugin {
     pomIncludeRepository := { _ => false },
     pomExtra := (
       <issueManagement>
-        <system>JIRA</system>
-        <url>https://issues.scala-lang.org/</url>
+        <system>GitHub</system>
+        <url>https://github.com/scala/{repoName.value}/issues</url>
       </issueManagement>
       <developers>
         <developer>
-          <id>epfl</id>
-          <name>EPFL</name>
+          <id>lamp</id>
+          <name>LAMP/EPFL</name>
         </developer>
         <developer>
-          <id>Typesafe</id>
-          <name>Typesafe, Inc.</name>
+          <id>Lightbend</id>
+          <name>Lightbend, Inc.</name>
         </developer>
       </developers>
     )
