@@ -6,6 +6,7 @@ import com.typesafe.tools.mima.plugin.{MimaPlugin, MimaKeys}, MimaKeys._
 object ScalaModulePlugin extends Plugin {
   val repoName                   = settingKey[String]("The name of the repository under github.com/scala/.")
   val mimaPreviousVersion        = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
+  val scalaVersionsByJvm         = settingKey[Map[Int, List[(String, Boolean)]]]("For a Java major version (6, 8, 9), a list of Scala version and a flag indicating whether to use this combination for publishing.")
 
   private val canRunMima         = taskKey[Boolean]("Decides if MiMa should run.")
   private val runMimaIfEnabled   = taskKey[Unit]("Run MiMa if mimaPreviousVersion and the module can be resolved against the current scalaBinaryVersion.")
@@ -15,15 +16,39 @@ object ScalaModulePlugin extends Plugin {
 
     mimaPreviousVersion := None,
 
+    scalaVersionsByJvm  := Map.empty,
+
+    crossScalaVersions  := {
+      val OneDot = """1\.(\d).*""".r // 1.6, 1.8
+      val Maj    = """(\d+).*""".r   // 9
+      val javaVersion = System.getProperty("java.version") match {
+        case OneDot(n) => n.toInt
+        case Maj(n)    => n.toInt
+        case v         => throw new RuntimeException(s"Unknown Java version: $v")
+      }
+      val isTravisPublishing = Option(System.getenv("TRAVIS_TAG")).getOrElse("").trim.nonEmpty
+      val scalaVersions = scalaVersionsByJvm.value.getOrElse(javaVersion, Nil) collect {
+        case (v, publish) if !isTravisPublishing || publish => v
+      }
+      if (scalaVersions.isEmpty) {
+        if (isTravisPublishing) {
+          sLog.value.warn(s"No Scala version in `scalaVersionsByJvm` in build.sbt needs to be released on Java major version $javaVersion.")
+          // Exit successfully, don't fail the (travis) build. This happens for example if `openjdk7`
+          // is part of the travis configuration for testing, but it's not used for releasing against
+          // any Scala version.
+          System.exit(0)
+        } else
+          throw new RuntimeException(s"No Scala version for Java major version $javaVersion. Adjust `scalaVersionsByJvm` in build.sbt.")
+      }
+      scalaVersions
+    },
+
+    scalaVersion       := crossScalaVersions.value.head,
+
     organization        := "org.scala-lang.modules",
 
     // so we don't have to wait for sonatype to synch to maven central when deploying a new module
     resolvers += Resolver.sonatypeRepo("releases"),
-
-    // to allow compiling against snapshot versions of Scala
-    resolvers += Resolver.sonatypeRepo("snapshots"),
-
-    // resolvers += "scala-release-temp" at "http://private-repo.typesafe.com/typesafe/scala-release-temp/"
 
     // don't use for doc scope, scaladoc warnings are not to be reckoned with
     // TODO: turn on for nightlies, but don't enable for PR validation... "-Xfatal-warnings"
@@ -72,17 +97,17 @@ object ScalaModulePlugin extends Plugin {
     pomIncludeRepository := { _ => false },
     pomExtra := (
       <issueManagement>
-        <system>JIRA</system>
-        <url>https://issues.scala-lang.org/</url>
+        <system>GitHub</system>
+        <url>https://github.com/scala/{repoName.value}/issues</url>
       </issueManagement>
       <developers>
         <developer>
-          <id>epfl</id>
-          <name>EPFL</name>
+          <id>lamp</id>
+          <name>LAMP/EPFL</name>
         </developer>
         <developer>
-          <id>Typesafe</id>
-          <name>Typesafe, Inc.</name>
+          <id>Lightbend</id>
+          <name>Lightbend, Inc.</name>
         </developer>
       </developers>
     )
