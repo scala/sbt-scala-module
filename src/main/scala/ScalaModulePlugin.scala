@@ -111,7 +111,7 @@ object ScalaModulePlugin extends Plugin {
         </developer>
       </developers>
     )
-  ) ++ mimaSettings
+  ) ++ mimaSettings ++ scalaModuleOsgiSettings
 
   // adapted from https://github.com/typesafehub/migration-manager/blob/0.1.6/sbtplugin/src/main/scala/com/typesafe/tools/mima/plugin/SbtMima.scala#L69
   def artifactExists(organization: String, name: String, scalaBinaryVersion: String, version: String, ivy: IvySbt, s: TaskStreams): Boolean = {
