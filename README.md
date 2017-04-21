@@ -17,7 +17,7 @@ scalaModuleSettings
 
 name         := "<module name>"
 repoName     := "<GitHub repo name>" // the repo under github.com/scala/, only required if different from name
-organization := "<org>"
+organization := "<org>"              // only required if different from "org.scala-lang.modules"
 version      := "<module version>"
 
 // The plugin uses `scalaVersionsByJvm` to set `crossScalaVersions` according to the JVM major version.
