@@ -3,22 +3,19 @@ import Keys._
 import com.typesafe.sbt.osgi.{OsgiKeys, SbtOsgi}
 import com.typesafe.tools.mima.plugin.{MimaPlugin, MimaKeys}, MimaKeys._
 
-object ScalaModulePlugin extends Plugin {
-  val repoName                   = settingKey[String]("The name of the repository under github.com/scala/.")
-  val mimaPreviousVersion        = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
-  val scalaVersionsByJvm         = settingKey[Map[Int, List[(String, Boolean)]]]("For a Java major version (6, 8, 9), a list of Scala version and a flag indicating whether to use this combination for publishing.")
+object ScalaModulePlugin extends AutoPlugin {
+  val repoName            = settingKey[String]("The name of the repository under github.com/scala/.")
+  val mimaPreviousVersion = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
+  val scalaVersionsByJvm  = settingKey[Map[Int, List[(String, Boolean)]]]("For a Java major version (6, 8, 9), a list of a Scala version and a flag indicating whether to use this combination for publishing.")
 
-  private val canRunMima         = taskKey[Boolean]("Decides if MiMa should run.")
-  private val runMimaIfEnabled   = taskKey[Unit]("Run MiMa if mimaPreviousVersion and the module can be resolved against the current scalaBinaryVersion.")
+  // Settings applied to the entire build when the plugin is loaded.
 
-  lazy val scalaModuleSettings: Seq[Setting[_]] = Seq(
-    repoName            := name.value,
+  override def trigger = allRequirements
 
-    mimaPreviousVersion := None,
+  override def buildSettings: Seq[Setting[_]] = Seq(
+    scalaVersionsByJvm := Map.empty,
 
-    scalaVersionsByJvm  := Map.empty,
-
-    crossScalaVersions  := {
+    crossScalaVersions in ThisBuild := {
       val OneDot = """1\.(\d).*""".r // 1.6, 1.8
       val Maj    = """(\d+).*""".r   // 9
       val javaVersion = System.getProperty("java.version") match {
@@ -26,33 +23,65 @@ object ScalaModulePlugin extends Plugin {
         case Maj(n)    => n.toInt
         case v         => throw new RuntimeException(s"Unknown Java version: $v")
       }
-      val isTravisPublishing = Option(System.getenv("TRAVIS_TAG")).getOrElse("").trim.nonEmpty
-      val scalaVersions = scalaVersionsByJvm.value.getOrElse(javaVersion, Nil) collect {
+
+      val isTravis = Option(System.getenv("TRAVIS")).exists(_ == "true") // `contains` doesn't exist in Scala 2.10
+      val isTravisPublishing = Option(System.getenv("TRAVIS_TAG")).exists(_.trim.nonEmpty)
+
+      val byJvm = scalaVersionsByJvm.value
+      if (byJvm.isEmpty)
+        throw new RuntimeException(s"Make sure to define `scalaVersionsByJvm in ThisBuild` in `build.sbt` in the root project, using the `ThisBuild` scope.")
+
+      val scalaVersions = byJvm.getOrElse(javaVersion, Nil) collect {
         case (v, publish) if !isTravisPublishing || publish => v
       }
       if (scalaVersions.isEmpty) {
-        if (isTravisPublishing) {
+        if (isTravis) {
           sLog.value.warn(s"No Scala version in `scalaVersionsByJvm` in build.sbt needs to be released on Java major version $javaVersion.")
           // Exit successfully, don't fail the (travis) build. This happens for example if `openjdk7`
           // is part of the travis configuration for testing, but it's not used for releasing against
           // any Scala version.
           System.exit(0)
         } else
-          throw new RuntimeException(s"No Scala version for Java major version $javaVersion. Adjust `scalaVersionsByJvm` in build.sbt.")
+          throw new RuntimeException(s"No Scala version for Java major version $javaVersion. Change your Java version or adjust `scalaVersionsByJvm` in build.sbt.")
       }
       scalaVersions
     },
 
-    scalaVersion       := crossScalaVersions.value.head,
+    scalaVersion in ThisBuild := crossScalaVersions.value.head
+  )
 
-    organization        := "org.scala-lang.modules",
+  /**
+   * Enable `-opt:l:classpath` or `-optimize`, depending on the scala version.
+   */
+  lazy val enableOptimizer: Setting[_] = scalacOptions in (Compile, compile) += {
+    val ScalaMaj = """2\.(\d+)\..*""".r
+    val ScalaMaj(scalaMaj) = scalaVersion.value
+    if (scalaMaj.toInt >= 12) "-opt:l:classpath" else "-optimize"
+  }
 
-    // so we don't have to wait for sonatype to synch to maven central when deploying a new module
-    resolvers += Resolver.sonatypeRepo("releases"),
+  /**
+   * Practical for multi-project builds.
+   */
+  lazy val disablePublishing: Seq[Setting[_]] = Seq(
+    publishArtifact := false,
+    // The above is enough for Maven repos but it doesn't prevent publishing of ivy.xml files
+    publish := {},
+    publishLocal := {},
+    publishTo := Some(Resolver.file("devnull", file("/dev/null")))
+  )
+
+  /**
+   * To be included in the main sbt project of a Scala module.
+   */
+  lazy val scalaModuleSettings: Seq[Setting[_]] = Seq(
+    repoName := name.value,
+
+    mimaPreviousVersion := None,
+
+    organization := "org.scala-lang.modules",
 
     // don't use for doc scope, scaladoc warnings are not to be reckoned with
-    // TODO: turn on for nightlies, but don't enable for PR validation... "-Xfatal-warnings"
-    scalacOptions in compile ++= Seq("-optimize", "-feature", "-deprecation", "-unchecked", "-Xlint"),
+    scalacOptions in (Compile, compile) ++= Seq("-feature", "-deprecation", "-unchecked", "-Xlint"),
 
     // Generate $name.properties to store our version as well as the scala version used to build
     resourceGenerators in Compile += Def.task {
@@ -75,8 +104,6 @@ object ScalaModulePlugin extends Plugin {
     // forking uses a minimal classpath, so this craziness is avoided
     // alternatively, manage the scala instance as shown at the end of this file (commented)
     fork in Test := true,
-
-    publishArtifact in Test := false,
 
     // maven publishing
     publishTo := Some(
@@ -114,7 +141,7 @@ object ScalaModulePlugin extends Plugin {
   ) ++ mimaSettings ++ scalaModuleOsgiSettings
 
   // adapted from https://github.com/typesafehub/migration-manager/blob/0.1.6/sbtplugin/src/main/scala/com/typesafe/tools/mima/plugin/SbtMima.scala#L69
-  def artifactExists(organization: String, name: String, scalaBinaryVersion: String, version: String, ivy: IvySbt, s: TaskStreams): Boolean = {
+  private def artifactExists(organization: String, name: String, scalaBinaryVersion: String, version: String, ivy: IvySbt, s: TaskStreams): Boolean = {
     val moduleId = new ModuleID(organization, s"${name}_$scalaBinaryVersion", version)
     val moduleSettings = InlineConfiguration(
       "dummy" % "test" % "version",
@@ -135,7 +162,11 @@ object ScalaModulePlugin extends Plugin {
     }
   }
 
-  lazy val mimaSettings: Seq[Setting[_]] = MimaPlugin.mimaDefaultSettings ++ Seq(
+  // Internal task keys for the MiMa settings
+  private val canRunMima       = taskKey[Boolean]("Decides if MiMa should run.")
+  private val runMimaIfEnabled = taskKey[Unit]("Run MiMa if mimaPreviousVersion and the module can be resolved against the current scalaBinaryVersion.")
+
+  private lazy val mimaSettings: Seq[Setting[_]] = MimaPlugin.mimaDefaultSettings ++ Seq(
     // manual cross-versioning because https://github.com/typesafehub/migration-manager/issues/62
     mimaPreviousArtifacts := Set(organization.value % s"${name.value}_${scalaBinaryVersion.value}" % mimaPreviousVersion.value.getOrElse("dummy")),
 
@@ -165,9 +196,9 @@ object ScalaModulePlugin extends Plugin {
   )
 
   // a setting-transform to turn the regular version into something osgi can deal with
-  val osgiVersion = version(_.replace('-', '.'))
+  private val osgiVersion = version(_.replace('-', '.'))
 
-  lazy val scalaModuleOsgiSettings = SbtOsgi.osgiSettings ++ Seq(
+  private lazy val scalaModuleOsgiSettings = SbtOsgi.osgiSettings ++ Seq(
     OsgiKeys.bundleSymbolicName  := s"${organization.value}.${name.value}",
     OsgiKeys.bundleVersion       := osgiVersion.value,
 
