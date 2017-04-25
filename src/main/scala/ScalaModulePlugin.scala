@@ -10,13 +10,15 @@ object ScalaModulePlugin extends AutoPlugin {
 
   // Settings applied to the entire build when the plugin is loaded.
 
+  // See https://github.com/sbt/sbt/issues/2082
   override def requires = plugins.JvmPlugin
   override def trigger = allRequirements
 
+  // Settings in here are implicitly `in ThisBuild`
   override def buildSettings: Seq[Setting[_]] = Seq(
     scalaVersionsByJvm := Map.empty,
 
-    crossScalaVersions in ThisBuild := {
+    crossScalaVersions := {
       val OneDot = """1\.(\d).*""".r // 1.6, 1.8
       val Maj    = """(\d+).*""".r   // 9
       val javaVersion = System.getProperty("java.version") match {
@@ -48,7 +50,7 @@ object ScalaModulePlugin extends AutoPlugin {
       scalaVersions
     },
 
-    scalaVersion in ThisBuild := crossScalaVersions.value.head
+    scalaVersion := crossScalaVersions.value.head
   )
 
   /**
