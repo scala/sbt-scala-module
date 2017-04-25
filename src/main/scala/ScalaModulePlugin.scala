@@ -57,9 +57,8 @@ object ScalaModulePlugin extends AutoPlugin {
    * Enable `-opt:l:classpath` or `-optimize`, depending on the scala version.
    */
   lazy val enableOptimizer: Setting[_] = scalacOptions in (Compile, compile) += {
-    val ScalaMaj = """2\.(\d+)\..*""".r
-    val ScalaMaj(scalaMaj) = scalaVersion.value
-    if (scalaMaj.toInt >= 12) "-opt:l:classpath" else "-optimize"
+    val Some((2, maj)) = CrossVersion.partialVersion(scalaVersion.value)
+    if (maj >= 12) "-opt:l:classpath" else "-optimize"
   }
 
   /**
