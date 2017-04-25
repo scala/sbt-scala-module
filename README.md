@@ -13,16 +13,19 @@ addSbtPlugin("org.scala-lang.modules" % "scala-module-plugin" % "1.0.6")
 Then, in your `build.sbt` add:
 
 ```
-scalaModuleSettings
+import ScalaModulePlugin._
+
+scalaModuleSettings // in a multi-project build, you might want to apply these settings only to the
+                    // main project (example: scala-parallel-collections)
 
 name         := "<module name>"
 repoName     := "<GitHub repo name>" // the repo under github.com/scala/, only required if different from name
 organization := "<org>"              // only required if different from "org.scala-lang.modules"
 version      := "<module version>"
 
-// The plugin uses `scalaVersionsByJvm` to set `crossScalaVersions` according to the JVM major version.
-// The `scalaVersion` is set to `crossScalaVersions.value.head`.
-scalaVersionsByJvm := {
+// The plugin uses `scalaVersionsByJvm` to set `crossScalaVersions in ThisBuild` according to the JVM major version.
+// The `scalaVersion in ThisBuild` is set to `crossScalaVersions.value.head`.
+scalaVersionsByJvm in ThisBuild := {
   val v211 = "2.11.11"
   val v212 = "2.12.2"
   val v213 = "2.13.0-M1"
@@ -32,8 +35,7 @@ scalaVersionsByJvm := {
     6 -> List(v211 -> true),
     7 -> List(v211 -> false),
     8 -> List(v212 -> true, v213 -> true, v211 -> false),
-    9 -> List(v212, v213, v211).map(_ -> false)
-  )
+    9 -> List(v212, v213, v211).map(_ -> false))
 }
 
 mimaPreviousVersion := Some("1.0.3") // enables MiMa (`None` by default, which disables it)
@@ -42,6 +44,18 @@ OsgiKeys.exportPackage := Seq(s"<exported package>;version=${version.value}")
 
 // Other settings
 ```
+
+These additional settings are enabled by `scalaModuleSettings`:
+  - `scalacOptions in (Compile, compile) ++= Seq("-feature", "-deprecation", "-unchecked", "-Xlint")`
+  - A `projectName.properties` file is generated and packaged
+  - `fork in Test := true` to work around some classpath clashes with scala-xml
+  - `publishTo` sonatype, credentials file expected in `~/.ivy2/.credentials`
+  - POM and OSGi metadata
+
+The following settings are also available:
+  - `enableOptimizer` adds `-opt:l:classpath` or `-optimize` to `scalacOptions in (Compile, compile)`,
+    depending on the Scala version
+  - `disablePublishing` is useful for multi-project builds for projects that should not be published
 
 ## Cutting a new release
 
