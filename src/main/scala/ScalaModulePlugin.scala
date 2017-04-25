@@ -10,6 +10,7 @@ object ScalaModulePlugin extends AutoPlugin {
 
   // Settings applied to the entire build when the plugin is loaded.
 
+  override def requires = plugins.JvmPlugin
   override def trigger = allRequirements
 
   override def buildSettings: Seq[Setting[_]] = Seq(
