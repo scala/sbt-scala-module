@@ -57,7 +57,7 @@ The following settings are also available:
     depending on the Scala version
   - `disablePublishing` is useful for multi-project builds for projects that should not be published
 
-## Cutting a new release
+## Cutting a new release (of this plugin)
 
 - Sign in to Bintray (https://bintray.com/login) or create an "Open Source" account (https://bintray.com/signup/oss)
 - Check if you have a repository named `sbt-plugins`. If not, create it (Name: sbt-plugins, Type: Generic).
