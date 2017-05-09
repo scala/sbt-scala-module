@@ -1,13 +1,18 @@
 # Scala modules sbt plugin
 
-This is an sbt plugin for creating a scala module build.
+This is an sbt plugin for building Scala modules (scala-xml,
+scala-parser-combinators, and so on).
+
+The major benefit of the plugin is to provide automated tag-based
+publishing via Sonatype.  Releasing only requires pushing a tag
+to GitHub, then Travis does the rest.
 
 ## Usage
 
 Add the plugin to the `project/plugins.sbt` file:
 
 ```
-addSbtPlugin("org.scala-lang.modules" % "scala-module-plugin" % "1.0.6")
+addSbtPlugin("org.scala-lang.modules" % "scala-module-plugin" % "1.0.8")
 ```
 
 Then, in your `build.sbt` add:
@@ -58,6 +63,12 @@ The following settings are also available:
   - `disablePublishing` is useful for multi-project builds for projects that should not be published
 
 ## Cutting a new release (of this plugin)
+
+### Release notes
+
+Tag the release and add release notes to https://github.com/scala/sbt-scala-modules/releases
+
+### Publishing via Bintray
 
 - Sign in to Bintray (https://bintray.com/login) or create an "Open Source" account (https://bintray.com/signup/oss)
 - Check if you have a repository named `sbt-plugins`. If not, create it (Name: sbt-plugins, Type: Generic).
