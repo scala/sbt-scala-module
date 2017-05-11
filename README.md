@@ -4,8 +4,9 @@ This is an sbt plugin for building Scala modules (scala-xml,
 scala-parser-combinators, and so on).
 
 The major benefit of the plugin is to provide automated tag-based
-publishing via Sonatype.  Releasing only requires pushing a tag
-to GitHub, then Travis does the rest.
+publishing.  A release is made by pushing a tag to GitHub.  Travis
+then stages artifacts on Sonatype.  Pressing "Close" and "Release" in
+the Sonatype web UI will then send the artifacts to Maven Central.
 
 ## Usage
 
