@@ -2,7 +2,7 @@ git.baseVersion   := "1.0.0"
 
 versionWithGit
 
-name              := "scala-module-plugin"
+name              := "sbt-scala-module"
 
 organization      := "org.scala-lang.modules"
 
