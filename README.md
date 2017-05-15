@@ -67,7 +67,7 @@ The following settings are also available:
 
 ### Release notes
 
-Tag the release and add release notes to https://github.com/scala/sbt-scala-modules/releases
+Tag the release and add release notes to https://github.com/scala/sbt-scala-module/releases
 
 ### Publishing via Bintray
 
