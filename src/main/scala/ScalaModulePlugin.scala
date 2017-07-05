@@ -1,17 +1,17 @@
-import sbt._
-import Keys._
 import com.typesafe.sbt.osgi.{OsgiKeys, SbtOsgi}
-import com.typesafe.tools.mima.plugin.{MimaPlugin, MimaKeys}, MimaKeys._
+import com.typesafe.tools.mima.plugin.MimaKeys._
+import com.typesafe.tools.mima.plugin.MimaPlugin
+import sbt.Keys._
+import sbt.{Def, _}
 
 object ScalaModulePlugin extends AutoPlugin {
   val repoName            = settingKey[String]("The name of the repository under github.com/scala/.")
   val mimaPreviousVersion = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
   val scalaVersionsByJvm  = settingKey[Map[Int, List[(String, Boolean)]]]("For a Java major version (6, 8, 9), a list of a Scala version and a flag indicating whether to use this combination for publishing.")
 
-  // Settings applied to the entire build when the plugin is loaded.
-
   // See https://github.com/sbt/sbt/issues/2082
   override def requires = plugins.JvmPlugin
+
   override def trigger = allRequirements
 
   // Settings in here are implicitly `in ThisBuild`
@@ -54,11 +54,16 @@ object ScalaModulePlugin extends AutoPlugin {
   )
 
   /**
-   * Enable `-opt:l:classpath` or `-optimize`, depending on the scala version.
+   * Enable `-opt:l:inline`, `-opt:l:classpath` or `-optimize`, depending on the scala version.
    */
-  lazy val enableOptimizer: Setting[_] = scalacOptions in (Compile, compile) += {
-    val Some((2, maj)) = CrossVersion.partialVersion(scalaVersion.value)
-    if (maj >= 12) "-opt:l:classpath" else "-optimize"
+  lazy val enableOptimizer: Setting[_] = scalacOptions in (Compile, compile) ++= {
+    val Ver = """(\d+)\.(\d+)\.(\d+).*""".r
+    val Ver("2", maj, min) = scalaVersion.value
+    (maj.toInt, min.toInt) match {
+      case (m, _) if m < 12 => Seq("-optimize")
+      case (12, n) if n < 3 => Seq("-opt:l:classpath")
+      case _                => Seq("-opt:l:inline", "-opt-inline-from:scala/**")
+    }
   }
 
   /**
@@ -77,8 +82,6 @@ object ScalaModulePlugin extends AutoPlugin {
    */
   lazy val scalaModuleSettings: Seq[Setting[_]] = Seq(
     repoName := name.value,
-
-    mimaPreviousVersion := None,
 
     organization := "org.scala-lang.modules",
 
@@ -140,6 +143,10 @@ object ScalaModulePlugin extends AutoPlugin {
         </developer>
       </developers>
     )
+  )
+
+  lazy val scalaModuleSettingsJVM: Seq[Setting[_]] = Seq(
+    mimaPreviousVersion := None
   ) ++ mimaSettings ++ scalaModuleOsgiSettings
 
   // adapted from https://github.com/typesafehub/migration-manager/blob/0.1.6/sbtplugin/src/main/scala/com/typesafe/tools/mima/plugin/SbtMima.scala#L69
@@ -200,7 +207,7 @@ object ScalaModulePlugin extends AutoPlugin {
   // a setting-transform to turn the regular version into something osgi can deal with
   private val osgiVersion = version(_.replace('-', '.'))
 
-  private lazy val scalaModuleOsgiSettings = SbtOsgi.osgiSettings ++ Seq(
+  private lazy val scalaModuleOsgiSettings = SbtOsgi.projectSettings ++ SbtOsgi.autoImport.osgiSettings ++ Seq(
     OsgiKeys.bundleSymbolicName  := s"${organization.value}.${name.value}",
     OsgiKeys.bundleVersion       := osgiVersion.value,
 
