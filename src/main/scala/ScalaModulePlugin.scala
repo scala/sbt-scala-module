@@ -143,11 +143,9 @@ object ScalaModulePlugin extends AutoPlugin {
         </developer>
       </developers>
     )
-  )
+  ) ++ mimaSettings
 
-  lazy val scalaModuleSettingsJVM: Seq[Setting[_]] = Seq(
-    mimaPreviousVersion := None
-  ) ++ mimaSettings ++ scalaModuleOsgiSettings
+  lazy val scalaModuleSettingsJVM: Seq[Setting[_]] = scalaModuleOsgiSettings
 
   // adapted from https://github.com/typesafehub/migration-manager/blob/0.1.6/sbtplugin/src/main/scala/com/typesafe/tools/mima/plugin/SbtMima.scala#L69
   private def artifactExists(organization: String, name: String, scalaBinaryVersion: String, version: String, ivy: IvySbt, s: TaskStreams): Boolean = {
@@ -176,8 +174,10 @@ object ScalaModulePlugin extends AutoPlugin {
   private val runMimaIfEnabled = taskKey[Unit]("Run MiMa if mimaPreviousVersion and the module can be resolved against the current scalaBinaryVersion.")
 
   private lazy val mimaSettings: Seq[Setting[_]] = MimaPlugin.mimaDefaultSettings ++ Seq(
-    // manual cross-versioning because https://github.com/typesafehub/migration-manager/issues/62
-    mimaPreviousArtifacts := Set(organization.value % s"${name.value}_${scalaBinaryVersion.value}" % mimaPreviousVersion.value.getOrElse("dummy")),
+    mimaPreviousVersion := None,
+
+    // We're not using `%%` here in order to support both jvm and js projects (cross version `_2.12` / `_sjs0.6_2.12`)
+    mimaPreviousArtifacts := Set(organization.value % moduleName.value % mimaPreviousVersion.value.getOrElse("dummy") cross crossVersion.value),
 
     canRunMima := {
       val mimaVer = mimaPreviousVersion.value
