@@ -147,6 +147,17 @@ object ScalaModulePlugin extends AutoPlugin {
 
   lazy val scalaModuleSettingsJVM: Seq[Setting[_]] = scalaModuleOsgiSettings
 
+  lazy val scalaModuleSettingsNative: Seq[Settings[_]] = Seq(
+    scalaVersion := "2.11.11",
+    skip in compile := System.getProperty("java.version").startsWith("1.6"),
+    test := {},
+    libraryDependencies := {
+      if (!scalaVersion.value.startsWith("2.11"))
+        libraryDependencies.value.filterNot(_.organization == "org.scala-native")
+      else libraryDependencies.value
+    }
+  )
+
   // adapted from https://github.com/typesafehub/migration-manager/blob/0.1.6/sbtplugin/src/main/scala/com/typesafe/tools/mima/plugin/SbtMima.scala#L69
   private def artifactExists(organization: String, name: String, scalaBinaryVersion: String, version: String, ivy: IvySbt, s: TaskStreams): Boolean = {
     val moduleId = new ModuleID(organization, s"${name}_$scalaBinaryVersion", version)
