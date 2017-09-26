@@ -1,3 +1,5 @@
+package com.lightbend.tools.scalamoduleplugin
+
 import com.typesafe.sbt.osgi.{OsgiKeys, SbtOsgi}
 import com.typesafe.tools.mima.plugin.MimaKeys._
 import com.typesafe.tools.mima.plugin.MimaPlugin
