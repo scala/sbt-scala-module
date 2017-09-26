@@ -13,7 +13,7 @@ the Sonatype web UI will then send the artifacts to Maven Central.
 Add the plugin to the `project/plugins.sbt` file:
 
 ```
-addSbtPlugin("org.scala-lang.modules" % "sbt-scala-module" % "1.0.12")
+addSbtPlugin("org.scala-lang.modules" % "sbt-scala-module" % "1.0.13")
 ```
 
 Then, in your `build.sbt` add:
@@ -76,7 +76,7 @@ Tag the release and add release notes to https://github.com/scala/sbt-scala-modu
 - Make sure the current `HEAD` is a tagged revision. In sbt, `version` (set by sbt-git) should be according to a tag.
 
       > version
-      [info] 1.0.12
+      [info] 1.0.13
 
 - Run `publish` in sbt. If you don't have a `~/.bintray/.credentials` file, the sbt-bintray plugin will ask you for your
   username and API key. The API key can be obtained under "Edit Profile" (https://bintray.com/profile/edit). The sbt-bintray
