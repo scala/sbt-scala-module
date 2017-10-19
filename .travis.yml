@@ -3,6 +3,11 @@ sudo: false
 
 language: scala
 
+addons:
+  apt:
+    packages:
+      - openjdk-6-jdk
+
 jdk:
   - openjdk6
 
