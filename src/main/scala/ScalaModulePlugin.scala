@@ -51,10 +51,11 @@ object ScalaModulePlugin extends AutoPlugin {
       }
       scalaVersions
     },
-
+    enableOptimizerInlineFrom := "<sources>",
     scalaVersion := crossScalaVersions.value.head
   )
 
+  val enableOptimizerInlineFrom = settingKey[String]("The value passed to -opt-inline-from by `enableOptimizer` on 2.13 and higher")
   /**
    * Enable `-opt:l:inline`, `-opt:l:classpath` or `-optimize`, depending on the scala version.
    */
@@ -63,8 +64,8 @@ object ScalaModulePlugin extends AutoPlugin {
     val Ver("2", maj, min) = scalaVersion.value
     (maj.toInt, min.toInt) match {
       case (m, _) if m < 12 => Seq("-optimize")
-      case (12, n) if n < 3 => Seq("-opt:l:classpath")
-      case _                => Seq("-opt:l:inline", "-opt-inline-from:scala/**")
+      case (12, n) if n < 3 => Seq("-opt:l:project")
+      case _                => Seq("-opt:l:inline", "-opt-inline-from:" + enableOptimizerInlineFrom.value)
     }
   }
 
