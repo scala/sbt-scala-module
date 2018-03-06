@@ -13,7 +13,7 @@ the Sonatype web UI will then send the artifacts to Maven Central.
 Add the plugin to the `project/plugins.sbt` file:
 
 ```
-addSbtPlugin("org.scala-lang.modules" % "sbt-scala-module" % "1.0.13")
+addSbtPlugin("org.scala-lang.modules" % "sbt-scala-module" % "1.0.14")
 ```
 
 Then, in your `build.sbt` add:
@@ -32,9 +32,9 @@ version      := "<module version>"
 // The plugin uses `scalaVersionsByJvm` to set `crossScalaVersions in ThisBuild` according to the JVM major version.
 // The `scalaVersion in ThisBuild` is set to `crossScalaVersions.value.head`.
 scalaVersionsByJvm in ThisBuild := {
-  val v211 = "2.11.11"
-  val v212 = "2.12.2"
-  val v213 = "2.13.0-M1"
+  val v211 = "2.11.12"
+  val v212 = "2.12.4"
+  val v213 = "2.13.0-M3"
 
   // Map[JvmMajorVersion, List[(ScalaVersion, UseForPublishing)]]
   Map(
