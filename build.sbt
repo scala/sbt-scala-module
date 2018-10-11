@@ -26,6 +26,6 @@ bintrayOrganization := None
 
 // Version 0.9.1 requires Java 8 (on 6 we get NoClassDefFoundError: java/util/function/Predicate).
 // We still run our plugin builds for 2.11 on Java 6, so we cannot upgrade.
-addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.8.0")
+addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.3")
 
 addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.14")
