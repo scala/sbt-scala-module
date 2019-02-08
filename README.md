@@ -33,8 +33,8 @@ version      := "<module version>"
 // The `scalaVersion in ThisBuild` is set to `crossScalaVersions.value.head`.
 scalaVersionsByJvm in ThisBuild := {
   val v211 = "2.11.12"
-  val v212 = "2.12.4"
-  val v213 = "2.13.0-M3"
+  val v212 = "2.12.8"
+  val v213 = "2.13.0-M5"
 
   // Map[JvmMajorVersion, List[(ScalaVersion, UseForPublishing)]]
   Map(
