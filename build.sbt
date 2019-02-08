@@ -18,7 +18,7 @@ publishMavenStyle := false
 
 resolvers         += Classpaths.sbtPluginReleases
 
-licenses          := Seq("BSD" -> url("http://opensource.org/licenses/BSD"))
+licenses          := Seq(("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0")))
 
 bintrayRepository := "sbt-plugins"
 

@@ -1,12 +1,12 @@
-# opt-in to Travis's newer/faster container-based infrastructure
-sudo: false
-
 language: scala
 
+# Needed for openjdk6
+dist: precise
+sudo: required
 addons:
-  apt:
-    packages:
-      - openjdk-6-jdk
+  hosts:
+    - localhost
+  hostname: localhost.local
 
 jdk:
   - openjdk6
@@ -19,7 +19,12 @@ cache:
   - $HOME/.sbt/launchers
 
 script:
-  - sbt test
+  # work around https://github.com/travis-ci/travis-ci/issues/9713
+  - if [[ $JAVA_HOME = *java-6* ]]; then jdk_switcher use openjdk6; fi
+  - java -version
+  # also, Maven Central and Bintray are unreachable over HTTPS
+  - if [[ $JAVA_HOME = *java-6* ]]; then SBTOPTS="-Dsbt.override.build.repos=true -Dsbt.repository.config=./.sbtrepos"; fi
+  - sbt $SBTOPTS test
 
 before_cache:
   - find $HOME/.sbt -name "*.lock" | xargs rm
