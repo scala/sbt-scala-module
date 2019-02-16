@@ -1,31 +1,15 @@
-git.baseVersion   := "1.0.0"
-
-versionWithGit
-
-name              := "sbt-scala-module"
-
-organization      := "org.scala-lang.modules"
-
 sbtPlugin         := true
 
-// sbtVersion in Global := "0.13.1"
+git.baseVersion   := "1.0.0"
+versionWithGit
 
-// scalaVersion in Global := "2.10.3"
-
-// publishTo         := Some(if (version.value.trim.endsWith("SNAPSHOT")) Classpaths.sbtPluginSnapshots else Classpaths.sbtPluginReleases)
-
-publishMavenStyle := false
-
-resolvers         += Classpaths.sbtPluginReleases
-
-licenses          := Seq(("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0")))
-
-bintrayRepository := "sbt-plugins"
-
+name                := "sbt-scala-module"
+organization        := "org.scala-lang.modules"
+licenses            := Seq(("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0")))
+resolvers           += Classpaths.sbtPluginReleases
+bintrayRepository   := "sbt-plugins"
 bintrayOrganization := None
+publishMavenStyle   := false
 
-// Version 0.9.1 requires Java 8 (on 6 we get NoClassDefFoundError: java/util/function/Predicate).
-// We still run our plugin builds for 2.11 on Java 6, so we cannot upgrade.
-addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.8.0")
-
+addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.4")
 addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.3.0")

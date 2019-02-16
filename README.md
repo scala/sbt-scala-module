@@ -1,19 +1,44 @@
 # Scala modules sbt plugin
 
-This is an sbt plugin for building Scala modules (scala-xml,
-scala-parser-combinators, and so on).
+This is an sbt plugin for building Scala modules.
 
-The major benefit of the plugin is to provide automated tag-based
-publishing.  A release is made by pushing a tag to GitHub.  Travis
-then stages artifacts on Sonatype.  Pressing "Close" and "Release" in
-the Sonatype web UI will then send the artifacts to Maven Central.
+## What modules use it?
+
+* [scala-async](https://github.com/scala/scala-async)
+* [scala-collection-compat](https://github.com/scala/scala-collection-compat)
+* [scala-java8-compat](https://github.com/scala/scala-java8-compat)
+* [scala-parallel-collections](https://github.com/scala/scala-parallel-collections)
+* [scala-parser-combinators](https://github.com/scala/scala-parser-combinators)
+* [scala-partest](https://github.com/scala/scala-partest)
+* [scala-swing](https://github.com/scala/scala-swing)
+* [scala-xml](https://github.com/scala/scala-xml)
+
+## Why this plugin?
+
+Having a shared plugin reduces duplication between the above
+repositories.  Reducing duplication makes maintenance easier and
+helps ensure consistency.
+
+A major feature of the plugin is automated tag-based publishing.  A
+release is made by pushing a tag to GitHub.  Travis-CI then stages
+artifacts on Sonatype.  Pressing "Close" and "Release" in the Sonatype
+web UI will then send the artifacts to Maven Central.
+
+## Branches and versions
+
+The main development branch is 2.x; only sbt 1 is supported there.
+
+sbt 0.13 support is on the legacy 1.x branch.
+
+Scala modules are encouraged to move to sbt 1 on their primary
+development branches as soon as reasonably possible.
 
 ## Usage
 
 Add the plugin to the `project/plugins.sbt` file:
 
 ```
-addSbtPlugin("org.scala-lang.modules" % "sbt-scala-module" % "1.0.14")
+addSbtPlugin("org.scala-lang.modules" % "sbt-scala-module" % "2.0.0")
 ```
 
 Then, in your `build.sbt` add:
@@ -22,7 +47,7 @@ Then, in your `build.sbt` add:
 import ScalaModulePlugin._
 
 scalaModuleSettings // in a multi-project build, you might want to apply these settings only to the
-                    // main project (example: scala-parallel-collections)
+                    // main project (see e.g. scala-parallel-collections)
 
 name         := "<module name>"
 repoName     := "<GitHub repo name>" // the repo under github.com/scala/, only required if different from name
@@ -35,13 +60,10 @@ scalaVersionsByJvm in ThisBuild := {
   val v211 = "2.11.12"
   val v212 = "2.12.8"
   val v213 = "2.13.0-M5"
-
   // Map[JvmMajorVersion, List[(ScalaVersion, UseForPublishing)]]
   Map(
-    6 -> List(v211 -> true),
-    7 -> List(v211 -> false),
-    8 -> List(v212 -> true, v213 -> true, v211 -> false),
-    9 -> List(v212, v213, v211).map(_ -> false))
+    8 -> List(v211 -> true, v212 -> true, v213 -> true),
+    9 -> List(v211, v212, v213).map(_ -> false))
 }
 
 mimaPreviousVersion := Some("1.0.0") // enables MiMa (`None` by default, which disables it)

@@ -1,34 +1,19 @@
 language: scala
 
-# Needed for openjdk6
-dist: precise
-sudo: required
-addons:
-  hosts:
-    - localhost
-  hostname: localhost.local
-
 jdk:
-  - openjdk6
+  - oraclejdk8
 
-# cache stuff, hopefully shortening build times
+script:
+  - sbt test
+
+before_cache:
+  - find $HOME/.sbt -name "*.lock" | xargs rm
+  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
 cache:
   directories:
   - $HOME/.ivy2
   - $HOME/.sbt/boot
   - $HOME/.sbt/launchers
-
-script:
-  # work around https://github.com/travis-ci/travis-ci/issues/9713
-  - if [[ $JAVA_HOME = *java-6* ]]; then jdk_switcher use openjdk6; fi
-  - java -version
-  # also, Maven Central and Bintray are unreachable over HTTPS
-  - if [[ $JAVA_HOME = *java-6* ]]; then SBTOPTS="-Dsbt.override.build.repos=true -Dsbt.repository.config=./.sbtrepos"; fi
-  - sbt $SBTOPTS test
-
-before_cache:
-  - find $HOME/.sbt -name "*.lock" | xargs rm
-  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
 
 notifications:
   email:
