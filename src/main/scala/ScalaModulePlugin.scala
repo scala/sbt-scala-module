@@ -3,8 +3,12 @@ package com.lightbend.tools.scalamoduleplugin
 import com.typesafe.sbt.osgi.{OsgiKeys, SbtOsgi}
 import com.typesafe.tools.mima.plugin.MimaKeys._
 import com.typesafe.tools.mima.plugin.MimaPlugin
+
 import sbt.Keys._
-import sbt.{Def, _}
+import sbt._
+import sbt.internal.librarymanagement.IvySbt
+import sbt.librarymanagement.ivy.IvyDependencyResolution
+import sbt.librarymanagement.{ UnresolvedWarningConfiguration, UpdateConfiguration }
 
 object ScalaModulePlugin extends AutoPlugin {
   val repoName            = settingKey[String]("The name of the repository under github.com/scala/.")
@@ -150,26 +154,18 @@ object ScalaModulePlugin extends AutoPlugin {
 
   lazy val scalaModuleSettingsJVM: Seq[Setting[_]] = scalaModuleOsgiSettings
 
-  // adapted from https://github.com/typesafehub/migration-manager/blob/0.1.6/sbtplugin/src/main/scala/com/typesafe/tools/mima/plugin/SbtMima.scala#L69
+  // adapted from https://github.com/lightbend/migration-manager/blob/0.3.0/sbtplugin/src/main/scala/com/typesafe/tools/mima/plugin/SbtMima.scala#L112
   private def artifactExists(organization: String, name: String, scalaBinaryVersion: String, version: String, ivy: IvySbt, s: TaskStreams): Boolean = {
-    val moduleId = new ModuleID(organization, s"${name}_$scalaBinaryVersion", version)
-    val moduleSettings = InlineConfiguration(
-      "dummy" % "test" % "version",
-      ModuleInfo("dummy-test-project-for-resolving"),
-      dependencies = Seq(moduleId))
-    val ivyModule = new ivy.Module(moduleSettings)
-    try {
-      IvyActions.update(
-        ivyModule,
-        new UpdateConfiguration(
-          retrieve = None,
-          missingOk = false,
-          logging = UpdateLogging.DownloadOnly),
-        s.log)
-      true
-    } catch {
-      case _: ResolveException => false
-    }
+    val moduleId = ModuleID(organization, s"${name}_$scalaBinaryVersion", version)
+    val depRes = IvyDependencyResolution(ivy.configuration)
+    val module = depRes.wrapDependencyInModule(moduleId)
+    val reportEither = depRes.update(
+      module,
+      UpdateConfiguration() withLogging UpdateLogging.DownloadOnly,
+      UnresolvedWarningConfiguration(),
+      s.log
+    )
+    reportEither.fold(_ => false, _ => true)
   }
 
   // Internal task keys for the MiMa settings
@@ -185,10 +181,11 @@ object ScalaModulePlugin extends AutoPlugin {
     canRunMima := {
       val mimaVer = mimaPreviousVersion.value
       val s = streams.value
+      val ivySbt = Keys.ivySbt.value
       if (mimaVer.isEmpty) {
         s.log.warn("MiMa will NOT run because no mimaPreviousVersion is provided.")
         false
-      } else if (!artifactExists(organization.value, name.value, scalaBinaryVersion.value, mimaVer.get, ivySbt.value, s)) {
+      } else if (!artifactExists(organization.value, name.value, scalaBinaryVersion.value, mimaVer.get, ivySbt, s)) {
         s.log.warn(s"""MiMa will NOT run because the previous artifact "${organization.value}" % "${name.value}_${scalaBinaryVersion.value}" % "${mimaVer.get}" could not be resolved (note the binary Scala version).""")
         false
       } else {
