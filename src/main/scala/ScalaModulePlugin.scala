@@ -176,7 +176,7 @@ object ScalaModulePlugin extends AutoPlugin {
     mimaPreviousVersion := None,
 
     // We're not using `%%` here in order to support both jvm and js projects (cross version `_2.12` / `_sjs0.6_2.12`)
-    mimaPreviousArtifacts := Set(organization.value % moduleName.value % mimaPreviousVersion.value.getOrElse("dummy") cross crossVersion.value),
+    mimaPreviousArtifacts := mimaPreviousVersion.value.map(organization.value % moduleName.value % _ cross crossVersion.value).toSet,
 
     canRunMima := {
       val mimaVer = mimaPreviousVersion.value
@@ -194,7 +194,7 @@ object ScalaModulePlugin extends AutoPlugin {
     },
 
     runMimaIfEnabled := Def.taskDyn({
-      if(canRunMima.value) Def.task { mimaReportBinaryIssues.value }
+      if (canRunMima.value) Def.task { mimaReportBinaryIssues.value }
       else Def.task { () }
     }).value,
 
