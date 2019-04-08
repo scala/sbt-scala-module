@@ -179,17 +179,17 @@ object ScalaModulePlugin extends AutoPlugin {
     mimaPreviousArtifacts := mimaPreviousVersion.value.map(organization.value % moduleName.value % _ cross crossVersion.value).toSet,
 
     canRunMima := {
-      val mimaVer = mimaPreviousVersion.value
       val s = streams.value
       val ivySbt = Keys.ivySbt.value
-      if (mimaVer.isEmpty) {
-        s.log.warn("MiMa will NOT run because no mimaPreviousVersion is provided.")
-        false
-      } else if (!artifactExists(organization.value, name.value, scalaBinaryVersion.value, mimaVer.get, ivySbt, s)) {
-        s.log.warn(s"""MiMa will NOT run because the previous artifact "${organization.value}" % "${name.value}_${scalaBinaryVersion.value}" % "${mimaVer.get}" could not be resolved (note the binary Scala version).""")
-        false
-      } else {
-        true
+      mimaPreviousVersion.value match {
+        case None =>
+          s.log.warn("MiMa will NOT run because no mimaPreviousVersion is provided.")
+          false
+        case Some(mimaPrevVer) if !artifactExists(organization.value, name.value, scalaBinaryVersion.value, mimaPrevVer, ivySbt, s) =>
+          s.log.warn(s"""MiMa will NOT run because the previous artifact "${organization.value}" % "${name.value}_${scalaBinaryVersion.value}" % "$mimaPrevVer" could not be resolved (note the binary Scala version).""")
+          false
+        case _ =>
+          true
       }
     },
 
