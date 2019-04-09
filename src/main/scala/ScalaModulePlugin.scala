@@ -11,9 +11,13 @@ import sbt.librarymanagement.ivy.IvyDependencyResolution
 import sbt.librarymanagement.{ UnresolvedWarningConfiguration, UpdateConfiguration }
 
 object ScalaModulePlugin extends AutoPlugin {
-  val repoName            = settingKey[String]("The name of the repository under github.com/scala/.")
-  val mimaPreviousVersion = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
-  val scalaVersionsByJvm  = settingKey[Map[Int, List[(String, Boolean)]]]("For a Java major version (6, 8, 9), a list of a Scala version and a flag indicating whether to use this combination for publishing.")
+  object autoImport {
+    val repoName = settingKey[String]("The name of the repository under github.com/scala/.")
+    val mimaPreviousVersion = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
+    val scalaVersionsByJvm = settingKey[Map[Int, List[(String, Boolean)]]]("For a Java major version (6, 8, 9), a list of a Scala version and a flag indicating whether to use this combination for publishing.")
+    val enableOptimizerInlineFrom = settingKey[String]("The value passed to -opt-inline-from by `enableOptimizer` on 2.13 and higher.")
+  }
+  import autoImport._
 
   // See https://github.com/sbt/sbt/issues/2082
   override def requires = plugins.JvmPlugin
@@ -59,7 +63,6 @@ object ScalaModulePlugin extends AutoPlugin {
     scalaVersion := crossScalaVersions.value.head
   )
 
-  val enableOptimizerInlineFrom = settingKey[String]("The value passed to -opt-inline-from by `enableOptimizer` on 2.13 and higher")
   /**
    * Enable `-opt:l:inline`, `-opt:l:classpath` or `-optimize`, depending on the scala version.
    */
