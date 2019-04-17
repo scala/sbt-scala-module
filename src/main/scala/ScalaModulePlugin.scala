@@ -12,10 +12,10 @@ import sbt.librarymanagement.{ UnresolvedWarningConfiguration, UpdateConfigurati
 
 object ScalaModulePlugin extends AutoPlugin {
   object autoImport {
-    val repoName = settingKey[String]("The name of the repository under github.com/scala/.")
-    val mimaPreviousVersion = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
-    val scalaVersionsByJvm = settingKey[Map[Int, List[(String, Boolean)]]]("For a Java major version (6, 8, 9), a list of a Scala version and a flag indicating whether to use this combination for publishing.")
-    val enableOptimizerInlineFrom = settingKey[String]("The value passed to -opt-inline-from by `enableOptimizer` on 2.13 and higher.")
+    val scalaModuleRepoName = settingKey[String]("The name of the repository under github.com/scala/.")
+    val scalaModuleMimaPreviousVersion = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
+    val scalaModuleScalaVersionsByJvm = settingKey[Map[Int, List[(String, Boolean)]]]("For a Java major version (6, 8, 9), a list of a Scala version and a flag indicating whether to use this combination for publishing.")
+    val scalaModuleEnableOptimizerInlineFrom = settingKey[String]("The value passed to -opt-inline-from by `enableOptimizer` on 2.13 and higher.")
   }
   import autoImport._
 
@@ -26,7 +26,7 @@ object ScalaModulePlugin extends AutoPlugin {
 
   // Settings in here are implicitly `in ThisBuild`
   override def buildSettings: Seq[Setting[_]] = Seq(
-    scalaVersionsByJvm := Map.empty,
+    scalaModuleScalaVersionsByJvm := Map.empty,
 
     crossScalaVersions := {
       val OneDot = """1\.(\d).*""".r // 1.6, 1.8
@@ -40,7 +40,7 @@ object ScalaModulePlugin extends AutoPlugin {
       val isTravis = Option(System.getenv("TRAVIS")).exists(_ == "true") // `contains` doesn't exist in Scala 2.10
       val isTravisPublishing = Option(System.getenv("TRAVIS_TAG")).exists(_.trim.nonEmpty)
 
-      val byJvm = scalaVersionsByJvm.value
+      val byJvm = scalaModuleScalaVersionsByJvm.value
       if (byJvm.isEmpty)
         throw new RuntimeException(s"Make sure to define `scalaVersionsByJvm in ThisBuild` in `build.sbt` in the root project, using the `ThisBuild` scope.")
 
@@ -59,7 +59,7 @@ object ScalaModulePlugin extends AutoPlugin {
       }
       scalaVersions
     },
-    enableOptimizerInlineFrom := "<sources>",
+    scalaModuleEnableOptimizerInlineFrom := "<sources>",
     scalaVersion := crossScalaVersions.value.head
   )
 
@@ -72,7 +72,7 @@ object ScalaModulePlugin extends AutoPlugin {
     (maj.toInt, min.toInt) match {
       case (m, _) if m < 12 => Seq("-optimize")
       case (12, n) if n < 3 => Seq("-opt:l:project")
-      case _                => Seq("-opt:l:inline", "-opt-inline-from:" + enableOptimizerInlineFrom.value)
+      case _                => Seq("-opt:l:inline", "-opt-inline-from:" + scalaModuleEnableOptimizerInlineFrom.value)
     }
   }
 
@@ -91,7 +91,7 @@ object ScalaModulePlugin extends AutoPlugin {
    * To be included in the main sbt project of a Scala module.
    */
   lazy val scalaModuleSettings: Seq[Setting[_]] = Seq(
-    repoName := name.value,
+    scalaModuleRepoName := name.value,
 
     organization := "org.scala-lang.modules",
 
@@ -131,7 +131,7 @@ object ScalaModulePlugin extends AutoPlugin {
     },
 
     publishMavenStyle    := true,
-    scmInfo              := Some(ScmInfo(url(s"https://github.com/scala/${repoName.value}"),s"scm:git:git://github.com/scala/${repoName.value}.git")),
+    scmInfo              := Some(ScmInfo(url(s"https://github.com/scala/${scalaModuleRepoName.value}"),s"scm:git:git://github.com/scala/${scalaModuleRepoName.value}.git")),
     homepage             := Some(url("http://www.scala-lang.org/")),
     organizationHomepage := Some(url("http://www.scala-lang.org/")),
     licenses             := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
@@ -140,7 +140,7 @@ object ScalaModulePlugin extends AutoPlugin {
     pomExtra := (
       <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/scala/{repoName.value}/issues</url>
+        <url>https://github.com/scala/{scalaModuleRepoName.value}/issues</url>
       </issueManagement>
       <developers>
         <developer>
@@ -172,14 +172,14 @@ object ScalaModulePlugin extends AutoPlugin {
   private val runMimaIfEnabled = taskKey[Unit]("Run MiMa if mimaPreviousVersion and the module can be resolved against the current scalaBinaryVersion.")
 
   private lazy val mimaSettings: Seq[Setting[_]] = MimaPlugin.mimaDefaultSettings ++ Seq(
-    mimaPreviousVersion := None,
+    scalaModuleMimaPreviousVersion := None,
 
     // We're not using `%%` here in order to support both jvm and js projects (cross version `_2.12` / `_sjs0.6_2.12`)
-    mimaPreviousArtifacts := mimaPreviousVersion.value.map(v => organization.value % moduleName.value % v cross crossVersion.value).toSet,
+    mimaPreviousArtifacts := scalaModuleMimaPreviousVersion.value.map(v => organization.value % moduleName.value % v cross crossVersion.value).toSet,
 
     canRunMima := {
       val log = streams.value.log
-      mimaPreviousVersion.value match {
+      scalaModuleMimaPreviousVersion.value match {
         case None =>
           log.warn("MiMa will NOT run because no mimaPreviousVersion is provided.")
           false
