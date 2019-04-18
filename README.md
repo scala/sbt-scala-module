@@ -1,6 +1,6 @@
 # Scala modules sbt plugin
 
-This is an sbt plugin for building Scala modules.
+This is an sbt 1.x plugin for building Scala modules.
 
 ## What modules use it?
 
@@ -23,15 +23,6 @@ A major feature of the plugin is automated tag-based publishing.  A
 release is made by pushing a tag to GitHub.  Travis-CI then stages
 artifacts on Sonatype.  Pressing "Close" and "Release" in the Sonatype
 web UI will then send the artifacts to Maven Central.
-
-## Branches and versions
-
-The main development branch is 2.x; only sbt 1 is supported there.
-
-sbt 0.13 support is on the legacy 1.x branch.
-
-Scala modules are encouraged to move to sbt 1 on their primary
-development branches as soon as reasonably possible.
 
 ## Usage
 
@@ -59,7 +50,7 @@ version      := "<module version>"
 scalaVersionsByJvm in ThisBuild := {
   val v211 = "2.11.12"
   val v212 = "2.12.8"
-  val v213 = "2.13.0-M5"
+  val v213 = "2.13.0-RC1"
   // Map[JvmMajorVersion, List[(ScalaVersion, UseForPublishing)]]
   Map(
     8 -> List(v211 -> true, v212 -> true, v213 -> true),
@@ -98,7 +89,7 @@ Tag the release and add release notes to https://github.com/scala/sbt-scala-modu
 - Make sure the current `HEAD` is a tagged revision. In sbt, `version` (set by sbt-git) should be according to a tag.
 
       > version
-      [info] 1.0.13
+      [info] 2.3.4
 
 - Run `publish` in sbt. If you don't have a `~/.bintray/.credentials` file, the sbt-bintray plugin will ask you for your
   username and API key. The API key can be obtained under "Edit Profile" (https://bintray.com/profile/edit). The sbt-bintray
@@ -110,4 +101,4 @@ Tag the release and add release notes to https://github.com/scala/sbt-scala-modu
   - Search for your plugin (`sbt-scala-module`)
   - Click "Send" to send the request
 
-The above instructions are a short version of http://www.scala-sbt.org/0.13/docs/Bintray-For-Plugins.html.
+The above instructions are a short version of https://www.scala-sbt.org/1.x/docs/Bintray-For-Plugins.html.
