@@ -159,12 +159,8 @@ object ScalaModulePlugin extends AutoPlugin {
     val moduleId = ModuleID(organization, s"${name}_$scalaBinaryVersion", version)
     val depRes = IvyDependencyResolution(ivy.configuration)
     val module = depRes.wrapDependencyInModule(moduleId)
-    val reportEither = depRes.update(
-      module,
-      UpdateConfiguration() withLogging UpdateLogging.DownloadOnly,
-      UnresolvedWarningConfiguration(),
-      s.log
-    )
+    val updateConf = UpdateConfiguration() withLogging UpdateLogging.DownloadOnly
+    val reportEither = depRes.update(module, updateConf, UnresolvedWarningConfiguration(), s.log)
     reportEither.fold(_ => false, _ => true)
   }
 
@@ -176,25 +172,24 @@ object ScalaModulePlugin extends AutoPlugin {
     mimaPreviousVersion := None,
 
     // We're not using `%%` here in order to support both jvm and js projects (cross version `_2.12` / `_sjs0.6_2.12`)
-    mimaPreviousArtifacts := Set(organization.value % moduleName.value % mimaPreviousVersion.value.getOrElse("dummy") cross crossVersion.value),
+    mimaPreviousArtifacts := mimaPreviousVersion.value.map(v => organization.value % moduleName.value % v cross crossVersion.value).toSet,
 
     canRunMima := {
-      val mimaVer = mimaPreviousVersion.value
-      val s = streams.value
-      val ivySbt = Keys.ivySbt.value
-      if (mimaVer.isEmpty) {
-        s.log.warn("MiMa will NOT run because no mimaPreviousVersion is provided.")
-        false
-      } else if (!artifactExists(organization.value, name.value, scalaBinaryVersion.value, mimaVer.get, ivySbt, s)) {
-        s.log.warn(s"""MiMa will NOT run because the previous artifact "${organization.value}" % "${name.value}_${scalaBinaryVersion.value}" % "${mimaVer.get}" could not be resolved (note the binary Scala version).""")
-        false
-      } else {
-        true
+      val log = streams.value.log
+      mimaPreviousVersion.value match {
+        case None =>
+          log.warn("MiMa will NOT run because no mimaPreviousVersion is provided.")
+          false
+        case Some(mimaVer) =>
+          val exists = artifactExists(organization.value, name.value, scalaBinaryVersion.value, mimaVer, ivySbt.value, streams.value)
+          if (!exists)
+            log.warn(s"""MiMa will NOT run because the previous artifact "${organization.value}" % "${name.value}_${scalaBinaryVersion.value}" % "$mimaVer" could not be resolved (note the binary Scala version).""")
+          exists
       }
     },
 
     runMimaIfEnabled := Def.taskDyn({
-      if(canRunMima.value) Def.task { mimaReportBinaryIssues.value }
+      if (canRunMima.value) Def.task { mimaReportBinaryIssues.value }
       else Def.task { () }
     }).value,
 
