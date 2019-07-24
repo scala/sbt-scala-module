@@ -13,7 +13,6 @@ import sbt.librarymanagement.{ UnresolvedWarningConfiguration, UpdateConfigurati
 object ScalaModulePlugin extends AutoPlugin {
   val repoName            = settingKey[String]("The name of the repository under github.com/scala/.")
   val mimaPreviousVersion = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
-  val scalaVersionsByJvm  = settingKey[Map[Int, List[(String, Boolean)]]]("For a Java major version (6, 8, 9), a list of a Scala version and a flag indicating whether to use this combination for publishing.")
 
   // See https://github.com/sbt/sbt/issues/2082
   override def requires = plugins.JvmPlugin
@@ -22,41 +21,7 @@ object ScalaModulePlugin extends AutoPlugin {
 
   // Settings in here are implicitly `in ThisBuild`
   override def buildSettings: Seq[Setting[_]] = Seq(
-    scalaVersionsByJvm := Map.empty,
-
-    crossScalaVersions := {
-      val OneDot = """1\.(\d).*""".r // 1.6, 1.8
-      val Maj    = """(\d+).*""".r   // 9
-      val javaVersion = System.getProperty("java.version") match {
-        case OneDot(n) => n.toInt
-        case Maj(n)    => n.toInt
-        case v         => throw new RuntimeException(s"Unknown Java version: $v")
-      }
-
-      val isTravis = Option(System.getenv("TRAVIS")).exists(_ == "true") // `contains` doesn't exist in Scala 2.10
-      val isTravisPublishing = Option(System.getenv("TRAVIS_TAG")).exists(_.trim.nonEmpty)
-
-      val byJvm = scalaVersionsByJvm.value
-      if (byJvm.isEmpty)
-        throw new RuntimeException(s"Make sure to define `scalaVersionsByJvm in ThisBuild` in `build.sbt` in the root project, using the `ThisBuild` scope.")
-
-      val scalaVersions = byJvm.getOrElse(javaVersion, Nil) collect {
-        case (v, publish) if !isTravisPublishing || publish => v
-      }
-      if (scalaVersions.isEmpty) {
-        if (isTravis) {
-          sLog.value.warn(s"No Scala version in `scalaVersionsByJvm` in build.sbt needs to be released on Java major version $javaVersion.")
-          // Exit successfully, don't fail the (travis) build. This happens for example if `openjdk7`
-          // is part of the travis configuration for testing, but it's not used for releasing against
-          // any Scala version.
-          System.exit(0)
-        } else
-          throw new RuntimeException(s"No Scala version for Java major version $javaVersion. Change your Java version or adjust `scalaVersionsByJvm` in build.sbt.")
-      }
-      scalaVersions
-    },
-    enableOptimizerInlineFrom := "<sources>",
-    scalaVersion := crossScalaVersions.value.head
+    enableOptimizerInlineFrom := "<sources>"
   )
 
   val enableOptimizerInlineFrom = settingKey[String]("The value passed to -opt-inline-from by `enableOptimizer` on 2.13 and higher")

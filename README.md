@@ -45,18 +45,6 @@ repoName     := "<GitHub repo name>" // the repo under github.com/scala/, only r
 organization := "<org>"              // only required if different from "org.scala-lang.modules"
 version      := "<module version>"
 
-// The plugin uses `scalaVersionsByJvm` to set `crossScalaVersions in ThisBuild` according to the JVM major version.
-// The `scalaVersion in ThisBuild` is set to `crossScalaVersions.value.head`.
-scalaVersionsByJvm in ThisBuild := {
-  val v211 = "2.11.12"
-  val v212 = "2.12.8"
-  val v213 = "2.13.0-RC1"
-  // Map[JvmMajorVersion, List[(ScalaVersion, UseForPublishing)]]
-  Map(
-    8 -> List(v211 -> true, v212 -> true, v213 -> true),
-    9 -> List(v211, v212, v213).map(_ -> false))
-}
-
 mimaPreviousVersion := Some("1.0.0") // enables MiMa (`None` by default, which disables it)
 
 OsgiKeys.exportPackage := Seq(s"<exported package>;version=${version.value}")
