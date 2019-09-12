@@ -43,7 +43,7 @@ object ScalaModulePlugin extends AutoPlugin {
     // The staging repository name. The default is `[sbt-sonatype] name version`. We cross-build
     // using parallel travis jobs, so we include the Scala/Scala.js versions to make them unique.
     sonatypeSessionName := {
-      val sjs = Option(System.getenv("SCALAJS_VERSION")).map(v => s" Scala.js $v").getOrElse("")
+      val sjs = Option(System.getenv("SCALAJS_VERSION")).filter(_.nonEmpty).map(v => s" Scala.js $v").getOrElse("")
       s"${sonatypeSessionName.value} Scala ${scalaVersion.value}$sjs"
     },
   )
