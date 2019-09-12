@@ -11,6 +11,8 @@ import sbt.librarymanagement.ivy.IvyDependencyResolution
 import sbt.librarymanagement.{UnresolvedWarningConfiguration, UpdateConfiguration}
 import sbtdynver.DynVerPlugin
 import sbtdynver.DynVerPlugin.autoImport.dynverGitDescribeOutput
+import xerial.sbt.Sonatype
+import xerial.sbt.Sonatype.autoImport.{sonatypeProfileName, sonatypeSessionName}
 
 object ScalaModulePlugin extends AutoPlugin {
   object autoImport {
@@ -28,6 +30,7 @@ object ScalaModulePlugin extends AutoPlugin {
   // Settings in here are implicitly `in ThisBuild`
   override def buildSettings: Seq[Setting[_]] = Seq(
     scalaModuleEnableOptimizerInlineFrom := "<sources>",
+
     // drop # suffix from tags
     dynverGitDescribeOutput ~= (_.map(dv =>
       dv.copy(ref = sbtdynver.GitRef(dv.ref.value.split('#').head)))),
@@ -94,6 +97,13 @@ object ScalaModulePlugin extends AutoPlugin {
           |See the NOTICE file distributed with this work for
           |additional information regarding copyright ownership.
           |""".stripMargin)),
+
+    // The staging profile is called `org.scala-lang`, the default is `org.scala-lang.modules`
+    sonatypeProfileName := "org.scala-lang",
+
+    // The name of the staging repository. The default is `[sbt-sonatype] name version`.Since we
+    // cross-build using parallel travis jobs, we include the Scala version to make them unique.
+    sonatypeSessionName := { s"${sonatypeSessionName.value} Scala ${scalaVersion.value}" },
 
     scmInfo              := Some(ScmInfo(url(s"https://github.com/scala/${scalaModuleRepoName.value}"),s"scm:git:git://github.com/scala/${scalaModuleRepoName.value}.git")),
     homepage             := Some(url("http://www.scala-lang.org/")),
