@@ -3,64 +3,34 @@ package com.lightbend.tools.scalamoduleplugin
 import com.typesafe.sbt.osgi.{OsgiKeys, SbtOsgi}
 import com.typesafe.tools.mima.plugin.MimaKeys._
 import com.typesafe.tools.mima.plugin.MimaPlugin
-
+import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{HeaderLicense, headerLicense}
 import sbt.Keys._
 import sbt._
 import sbt.internal.librarymanagement.IvySbt
 import sbt.librarymanagement.ivy.IvyDependencyResolution
-import sbt.librarymanagement.{ UnresolvedWarningConfiguration, UpdateConfiguration }
+import sbt.librarymanagement.{UnresolvedWarningConfiguration, UpdateConfiguration}
+import sbtdynver.DynVerPlugin
+import sbtdynver.DynVerPlugin.autoImport.dynverGitDescribeOutput
 
 object ScalaModulePlugin extends AutoPlugin {
   object autoImport {
     val scalaModuleRepoName = settingKey[String]("The name of the repository under github.com/scala/.")
     val scalaModuleMimaPreviousVersion = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
-    val scalaModuleScalaVersionsByJvm = settingKey[Map[Int, List[(String, Boolean)]]]("For a Java major version (6, 8, 9), a list of a Scala version and a flag indicating whether to use this combination for publishing.")
     val scalaModuleEnableOptimizerInlineFrom = settingKey[String]("The value passed to -opt-inline-from by `enableOptimizer` on 2.13 and higher.")
   }
   import autoImport._
 
-  // See https://github.com/sbt/sbt/issues/2082
-  override def requires = plugins.JvmPlugin
+  // depend on DynVerPlugin to allow modifying dynverGitDescribeOutput in buildSettings below
+  override def requires = DynVerPlugin
 
   override def trigger = allRequirements
 
   // Settings in here are implicitly `in ThisBuild`
   override def buildSettings: Seq[Setting[_]] = Seq(
-    scalaModuleScalaVersionsByJvm := Map.empty,
-
-    crossScalaVersions := {
-      val OneDot = """1\.(\d).*""".r // 1.6, 1.8
-      val Maj    = """(\d+).*""".r   // 9
-      val javaVersion = System.getProperty("java.version") match {
-        case OneDot(n) => n.toInt
-        case Maj(n)    => n.toInt
-        case v         => throw new RuntimeException(s"Unknown Java version: $v")
-      }
-
-      val isTravis = Option(System.getenv("TRAVIS")).exists(_ == "true") // `contains` doesn't exist in Scala 2.10
-      val isTravisPublishing = Option(System.getenv("TRAVIS_TAG")).exists(_.trim.nonEmpty)
-
-      val byJvm = scalaModuleScalaVersionsByJvm.value
-      if (byJvm.isEmpty)
-        throw new RuntimeException(s"Make sure to define `scalaVersionsByJvm in ThisBuild` in `build.sbt` in the root project, using the `ThisBuild` scope.")
-
-      val scalaVersions = byJvm.getOrElse(javaVersion, Nil) collect {
-        case (v, publish) if !isTravisPublishing || publish => v
-      }
-      if (scalaVersions.isEmpty) {
-        if (isTravis) {
-          sLog.value.warn(s"No Scala version in `scalaVersionsByJvm` in build.sbt needs to be released on Java major version $javaVersion.")
-          // Exit successfully, don't fail the (travis) build. This happens for example if `openjdk7`
-          // is part of the travis configuration for testing, but it's not used for releasing against
-          // any Scala version.
-          System.exit(0)
-        } else
-          throw new RuntimeException(s"No Scala version for Java major version $javaVersion. Change your Java version or adjust `scalaVersionsByJvm` in build.sbt.")
-      }
-      scalaVersions
-    },
     scalaModuleEnableOptimizerInlineFrom := "<sources>",
-    scalaVersion := crossScalaVersions.value.head
+    // drop # suffix from tags
+    dynverGitDescribeOutput ~= (_.map(dv =>
+      dv.copy(ref = sbtdynver.GitRef(dv.ref.value.split('#').head)))),
   )
 
   /**
@@ -76,15 +46,8 @@ object ScalaModulePlugin extends AutoPlugin {
     }
   }
 
-  /**
-   * Practical for multi-project builds.
-   */
   lazy val disablePublishing: Seq[Setting[_]] = Seq(
-    publishArtifact := false,
-    // The above is enough for Maven repos but it doesn't prevent publishing of ivy.xml files
-    publish := {},
-    publishLocal := {},
-    publishTo := Some(Resolver.file("devnull", file("/dev/null")))
+    skip in publish := true // works in sbt 1+
   )
 
   /**
@@ -120,17 +83,18 @@ object ScalaModulePlugin extends AutoPlugin {
     // alternatively, manage the scala instance as shown at the end of this file (commented)
     fork in Test := true,
 
-    // maven publishing
-    publishTo := Some(
-      if (version.value.trim.endsWith("SNAPSHOT")) Resolver.sonatypeRepo("snapshots")
-      else Opts.resolver.sonatypeStaging
-    ),
-    credentials ++= {
-      val file = Path.userHome / ".ivy2" / ".credentials"
-      if (file.exists) List(new FileCredentials(file)) else Nil
-    },
+    headerLicense := Some(HeaderLicense.Custom(
+      s"""|Scala (https://www.scala-lang.org)
+          |
+          |Copyright EPFL and Lightbend, Inc.
+          |
+          |Licensed under Apache License 2.0
+          |(http://www.apache.org/licenses/LICENSE-2.0).
+          |
+          |See the NOTICE file distributed with this work for
+          |additional information regarding copyright ownership.
+          |""".stripMargin)),
 
-    publishMavenStyle    := true,
     scmInfo              := Some(ScmInfo(url(s"https://github.com/scala/${scalaModuleRepoName.value}"),s"scm:git:git://github.com/scala/${scalaModuleRepoName.value}.git")),
     homepage             := Some(url("http://www.scala-lang.org/")),
     organizationHomepage := Some(url("http://www.scala-lang.org/")),
