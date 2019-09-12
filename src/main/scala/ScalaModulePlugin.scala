@@ -35,6 +35,19 @@ object ScalaModulePlugin extends AutoPlugin {
       dv.copy(ref = sbtdynver.GitRef(dv.ref.value.split('#').head)))),
   )
 
+  // Settings added to the global scope
+  override def projectSettings: Seq[Setting[_]] = Seq(
+    // The staging profile is called `org.scala-lang`, the default is `org.scala-lang.modules`
+    sonatypeProfileName := "org.scala-lang",
+
+    // The staging repository name. The default is `[sbt-sonatype] name version`. We cross-build
+    // using parallel travis jobs, so we include the Scala/Scala.js versions to make them unique.
+    sonatypeSessionName := {
+      val sjs = Option(System.getenv("SCALAJS_VERSION")).map(v => s" Scala.js $v").getOrElse("")
+      s"${sonatypeSessionName.value} Scala ${scalaVersion.value}$sjs"
+    },
+  )
+
   /**
    * Enable `-opt:l:inline`, `-opt:l:classpath` or `-optimize`, depending on the scala version.
    */
@@ -96,13 +109,6 @@ object ScalaModulePlugin extends AutoPlugin {
           |See the NOTICE file distributed with this work for
           |additional information regarding copyright ownership.
           |""".stripMargin)),
-
-    // The staging profile is called `org.scala-lang`, the default is `org.scala-lang.modules`
-    sonatypeProfileName := "org.scala-lang",
-
-    // The name of the staging repository. The default is `[sbt-sonatype] name version`.Since we
-    // cross-build using parallel travis jobs, we include the Scala version to make them unique.
-    sonatypeSessionName := { s"${sonatypeSessionName.value} Scala ${scalaVersion.value}" },
 
     scmInfo              := Some(ScmInfo(url(s"https://github.com/scala/${scalaModuleRepoName.value}"),s"scm:git:git://github.com/scala/${scalaModuleRepoName.value}.git")),
     homepage             := Some(url("http://www.scala-lang.org/")),
