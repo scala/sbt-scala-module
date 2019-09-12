@@ -11,7 +11,6 @@ import sbt.librarymanagement.ivy.IvyDependencyResolution
 import sbt.librarymanagement.{UnresolvedWarningConfiguration, UpdateConfiguration}
 import sbtdynver.DynVerPlugin
 import sbtdynver.DynVerPlugin.autoImport.dynverGitDescribeOutput
-import xerial.sbt.Sonatype
 import xerial.sbt.Sonatype.autoImport.{sonatypeProfileName, sonatypeSessionName}
 
 object ScalaModulePlugin extends AutoPlugin {
