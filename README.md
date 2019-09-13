@@ -61,7 +61,7 @@ OsgiKeys.exportPackage := Seq(s"<exported package>;version=${version.value}")
 
 Scala versions are defined in `.travis.yml`.
 
-Cross-building with Scala.js is possible, see scala-xml for example.
+Cross-building with Scala.js and Scala Native is possible, see scala-xml or scala-parser-combinators for example.
 
 These additional settings are enabled by `scalaModuleSettings`:
   - `scalacOptions in (Compile, compile) ++= Seq("-feature", "-deprecation", "-unchecked", "-Xlint")`

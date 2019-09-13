@@ -40,11 +40,12 @@ object ScalaModulePlugin extends AutoPlugin {
     // The staging profile is called `org.scala-lang`, the default is `org.scala-lang.modules`
     sonatypeProfileName := "org.scala-lang",
 
-    // The staging repository name. The default is `[sbt-sonatype] name version`. We cross-build
-    // using parallel travis jobs, so we include the Scala/Scala.js versions to make them unique.
+    // The staging repository name. The default is `[sbt-sonatype] name version`. We include the
+    // Scala/Scala.js/Scala Native versions to avoid conflicts when running the travis jobs.
     sonatypeSessionName := {
       val sjs = Option(System.getenv("SCALAJS_VERSION")).filter(_.nonEmpty).map(v => s" Scala.js $v").getOrElse("")
-      s"${sonatypeSessionName.value} Scala ${scalaVersion.value}$sjs"
+      val native = Option(System.getenv("SCALANATIVE_VERSION")).filter(_.nonEmpty).map(v => s" Scala Native $v").getOrElse("")
+      s"${sonatypeSessionName.value} Scala ${scalaVersion.value}$sjs$native"
     },
   )
 
