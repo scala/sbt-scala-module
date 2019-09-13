@@ -74,6 +74,28 @@ The following settings are also available:
     depending on the Scala version
   - `disablePublishing` is useful for multi-project builds for projects that should not be published
 
+## Set up tag-based publishing
+
+The instructions here are a sumamry of the readme in https://github.com/olafurpg/sbt-ci-release
+  - Create a fresh GPG key: `gpg --gen-key`
+    - Real name: use "project-name bot"
+    - Email: "scala-internals@googlegroups.com"
+    - Passphrase: generate one yourself
+  - Get the key `LONG_ID` from the output and set `LONG_ID=6E8ED79B03AD527F1B281169D28FC818985732D9`
+  
+        pub   rsa2048 2018-06-10 [SC] [expires: 2020-06-09]
+          $LONG_ID
+  - Copy the public key to a key server
+    - `gpg --armor --export $LONG_ID`
+    - http://keyserver.ubuntu.com:11371/
+  - Open the Settings panel on your project's travis, define four secret env vars
+    - `PGP_PASSPHRASE` the passphrase you chose above
+    - `PGP_SECRET` the secret key in base64
+      - macOS: `gpg --armor --export-secret-keys $LONG_ID | base64`
+      - ubuntu: `gpg --armor --export-secret-keys $LONG_ID | base64 -w0`
+    - `SONATYPE_PASSWORD`: need that one
+    - `SONATYPE_USERNAME`: that one too
+
 ## Cutting a new release (of this plugin)
 
 ### Release notes
