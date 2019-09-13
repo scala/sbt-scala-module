@@ -21,43 +21,36 @@ Having a shared plugin reduces duplication between the above
 repositories.  Reducing duplication makes maintenance easier and
 helps ensure consistency.
 
-A major feature of the plugin is automated tag-based publishing.  A
-release is made by pushing a tag to GitHub.  Travis-CI then stages
-artifacts on Sonatype.  Pressing "Close" and "Release" in the Sonatype
-web UI will then send the artifacts to Maven Central.
+A major feature of the plugin is automated tag-based publishing using
+sbt-ci-release. A release is made by pushing a tag to GitHub.
+
+The plugin also brings in
+  - sbt-travisci to set the `scalaVersion` and `crossScalaVersions`
+  - sbt-dynver to set the `version` based on the git history
+  - sbt-header
+  - sbt-osgi
 
 ## Usage
 
 Add the plugin to the `project/plugins.sbt` file:
 
 ```
-addSbtPlugin("org.scala-lang.modules" % "sbt-scala-module" % "2.0.0")
+addSbtPlugin("org.scala-lang.modules" % "sbt-scala-module" % "2.1.0")
 ```
 
 Then, in your `build.sbt` add:
 
 ```
-import ScalaModulePlugin._
+// In a multi-project build, you might want to apply these settings only to the
+// main project (see e.g. scala-parallel-collections)
+ScalaModulePlugin.scalaModuleSettings
 
-scalaModuleSettings // in a multi-project build, you might want to apply these settings only to the
-                    // main project (see e.g. scala-parallel-collections)
+// For JVM projects
+ScalaModulePlugin.scalaModuleSettingsJVM
 
 name         := "<module name>"
 repoName     := "<GitHub repo name>" // the repo under github.com/scala/, only required if different from name
 organization := "<org>"              // only required if different from "org.scala-lang.modules"
-version      := "<module version>"
-
-// The plugin uses `scalaVersionsByJvm` to set `crossScalaVersions in ThisBuild` according to the JVM major version.
-// The `scalaVersion in ThisBuild` is set to `crossScalaVersions.value.head`.
-scalaVersionsByJvm in ThisBuild := {
-  val v211 = "2.11.12"
-  val v212 = "2.12.8"
-  val v213 = "2.13.0-RC1"
-  // Map[JvmMajorVersion, List[(ScalaVersion, UseForPublishing)]]
-  Map(
-    8 -> List(v211 -> true, v212 -> true, v213 -> true),
-    9 -> List(v211, v212, v213).map(_ -> false))
-}
 
 mimaPreviousVersion := Some("1.0.0") // enables MiMa (`None` by default, which disables it)
 
@@ -66,11 +59,14 @@ OsgiKeys.exportPackage := Seq(s"<exported package>;version=${version.value}")
 // Other settings
 ```
 
+Scala versions are defined in `.travis.yml`.
+
+Cross-building with Scala.js is possible, see scala-xml for example.
+
 These additional settings are enabled by `scalaModuleSettings`:
   - `scalacOptions in (Compile, compile) ++= Seq("-feature", "-deprecation", "-unchecked", "-Xlint")`
   - A `projectName.properties` file is generated and packaged
   - `fork in Test := true` to work around some classpath clashes with scala-xml
-  - `publishTo` sonatype, credentials file expected in `~/.ivy2/.credentials`
   - POM and OSGi metadata
 
 The following settings are also available:
