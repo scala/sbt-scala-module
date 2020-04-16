@@ -53,7 +53,7 @@ object ScalaModulePlugin extends AutoPlugin {
   )
 
   /**
-   * Enable `-opt:l:inline`, `-opt:l:classpath` or `-optimize`, depending on the scala version.
+   * Enable `-opt:l:inline`, `-opt:l:project` or `-optimize`, depending on the scala version.
    */
   lazy val enableOptimizer: Setting[_] = scalacOptions in (Compile, compile) ++= {
     val Ver = """(\d+)\.(\d+)\.(\d+).*""".r
@@ -138,7 +138,25 @@ object ScalaModulePlugin extends AutoPlugin {
     )
   ) ++ mimaSettings
 
+  @deprecated("use scalaModuleOsgiSettings instead", "2.2.0")
   lazy val scalaModuleSettingsJVM: Seq[Setting[_]] = scalaModuleOsgiSettings
+
+  // enables the SbtOsgi plugin and defines some default settings
+  lazy val scalaModuleOsgiSettings: Seq[Setting[_]] = SbtOsgi.projectSettings ++ SbtOsgi.autoImport.osgiSettings ++ Seq(
+    OsgiKeys.bundleSymbolicName  := s"${organization.value}.${name.value}",
+    OsgiKeys.bundleVersion       := osgiVersion.value,
+
+    // Sources should also have a nice MANIFEST file
+    packageOptions in packageSrc := Seq(Package.ManifestAttributes(
+      ("Bundle-SymbolicName", s"${organization.value}.${name.value}.source"),
+      ("Bundle-Name", s"${name.value} sources"),
+      ("Bundle-Version", osgiVersion.value),
+      ("Eclipse-SourceBundle", s"""${organization.value}.${name.value};version="${osgiVersion.value}";roots:="."""")
+    ))
+  )
+
+  // a setting-transform to turn the regular version into something osgi can deal with
+  private val osgiVersion = version(_.replace('-', '.'))
 
   // adapted from https://github.com/lightbend/migration-manager/blob/0.3.0/sbtplugin/src/main/scala/com/typesafe/tools/mima/plugin/SbtMima.scala#L112
   private def artifactExists(organization: String, name: String, scalaBinaryVersion: String, version: String, ivy: IvySbt, s: TaskStreams): Boolean = {
@@ -154,7 +172,7 @@ object ScalaModulePlugin extends AutoPlugin {
   private val canRunMima       = taskKey[Boolean]("Decides if MiMa should run.")
   private val runMimaIfEnabled = taskKey[Unit]("Run MiMa if mimaPreviousVersion and the module can be resolved against the current scalaBinaryVersion.")
 
-  private lazy val mimaSettings: Seq[Setting[_]] = MimaPlugin.mimaDefaultSettings ++ Seq(
+  private lazy val mimaSettings: Seq[Setting[_]] = Seq(
     scalaModuleMimaPreviousVersion := None,
 
     // We're not using `%%` here in order to support both jvm and js projects (cross version `_2.12` / `_sjs0.6_2.12`)
@@ -183,22 +201,6 @@ object ScalaModulePlugin extends AutoPlugin {
       runMimaIfEnabled.value
       (test in Test).value
     }
-  )
-
-  // a setting-transform to turn the regular version into something osgi can deal with
-  private val osgiVersion = version(_.replace('-', '.'))
-
-  private lazy val scalaModuleOsgiSettings = SbtOsgi.projectSettings ++ SbtOsgi.autoImport.osgiSettings ++ Seq(
-    OsgiKeys.bundleSymbolicName  := s"${organization.value}.${name.value}",
-    OsgiKeys.bundleVersion       := osgiVersion.value,
-
-    // Sources should also have a nice MANIFEST file
-    packageOptions in packageSrc := Seq(Package.ManifestAttributes(
-                          ("Bundle-SymbolicName", s"${organization.value}.${name.value}.source"),
-                          ("Bundle-Name", s"${name.value} sources"),
-                          ("Bundle-Version", osgiVersion.value),
-                          ("Eclipse-SourceBundle", s"""${organization.value}.${name.value};version="${osgiVersion.value}";roots:="."""")
-                      ))
   )
 }
 

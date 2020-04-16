@@ -4,6 +4,7 @@ This is an sbt 1.x plugin for building Scala modules.
 
 ## What modules use it?
 
+* [travis-test](https://github.com/lrytz/travis-test) (example project for testing this plugin and tag-driven releases)
 * [scala-async](https://github.com/scala/scala-async)
 * [scala-collection-compat](https://github.com/scala/scala-collection-compat)
 * [scala-collection-contrib](https://github.com/scala/scala-collection-contrib)
@@ -18,7 +19,7 @@ This is an sbt 1.x plugin for building Scala modules.
 ## Why this plugin?
 
 Having a shared plugin reduces duplication between the above
-repositories.  Reducing duplication makes maintenance easier and
+repositories. Reducing duplication makes maintenance easier and
 helps ensure consistency.
 
 A major feature of the plugin is automated tag-based publishing using
@@ -28,14 +29,14 @@ The plugin also brings in
   - sbt-travisci to set the `scalaVersion` and `crossScalaVersions`
   - sbt-dynver to set the `version` based on the git history
   - sbt-header
-  - sbt-osgi
+  - sbt-osgi (only enabled when using `scalaModuleOsgiSettings`)
 
 ## Usage
 
 Add the plugin to the `project/plugins.sbt` file:
 
 ```
-addSbtPlugin("org.scala-lang.modules" % "sbt-scala-module" % "2.1.0")
+addSbtPlugin("org.scala-lang.modules" % "sbt-scala-module" % "2.2.0")
 ```
 
 Then, in your `build.sbt` add:
@@ -45,14 +46,14 @@ Then, in your `build.sbt` add:
 // main project (see e.g. scala-parallel-collections)
 ScalaModulePlugin.scalaModuleSettings
 
-// For JVM projects
-ScalaModulePlugin.scalaModuleSettingsJVM
+// If making an OSGi bundle
+ScalaModulePlugin.scalaModuleOsgiSettings
 
 name         := "<module name>"
 repoName     := "<GitHub repo name>" // the repo under github.com/scala/, only required if different from name
 organization := "<org>"              // only required if different from "org.scala-lang.modules"
 
-mimaPreviousVersion := Some("1.0.0") // enables MiMa (`None` by default, which disables it)
+scalaModuleMimaPreviousVersion := Some("1.0.0") // enables MiMa (`None` by default, which disables it)
 
 OsgiKeys.exportPackage := Seq(s"<exported package>;version=${version.value}")
 
@@ -61,13 +62,13 @@ OsgiKeys.exportPackage := Seq(s"<exported package>;version=${version.value}")
 
 Scala versions are defined in `.travis.yml`.
 
-Cross-building with Scala.js and Scala Native is possible, see scala-xml or scala-parser-combinators for example.
+Cross-building with Scala.js and Scala Native is possible, see travis-test, scala-xml or scala-parser-combinators for example.
 
 These additional settings are enabled by `scalaModuleSettings`:
   - `scalacOptions in (Compile, compile) ++= Seq("-feature", "-deprecation", "-unchecked", "-Xlint")`
   - A `projectName.properties` file is generated and packaged
   - `fork in Test := true` to work around some classpath clashes with scala-xml
-  - POM and OSGi metadata
+  - POM metadata
 
 The following settings are also available:
   - `enableOptimizer` adds `-opt-inline-from:<sources>` or `-opt:l:project` or `-optimize` to `scalacOptions in (Compile, compile)`,
@@ -106,6 +107,7 @@ Tag the release and add release notes to https://github.com/scala/sbt-scala-modu
 
 - Sign in to Bintray (https://bintray.com/login) or create an "Open Source" account (https://bintray.com/signup/oss)
 - Check if you have a repository named `sbt-plugins`. If not, create it (Name: sbt-plugins, Type: Generic).
+- Make sure to use Java 8
 - Make sure the current `HEAD` is a tagged revision. In sbt, `version` (set by sbt-git) should be according to a tag.
 
       > version
