@@ -8,11 +8,9 @@ This is an sbt 1.x plugin for building Scala modules.
 * [scala-async](https://github.com/scala/scala-async)
 * [scala-collection-compat](https://github.com/scala/scala-collection-compat)
 * [scala-collection-contrib](https://github.com/scala/scala-collection-contrib)
-* [scala-continuations](https://github.com/scala/scala-continuations)
 * [scala-java8-compat](https://github.com/scala/scala-java8-compat)
 * [scala-parallel-collections](https://github.com/scala/scala-parallel-collections)
 * [scala-parser-combinators](https://github.com/scala/scala-parser-combinators)
-* [scala-partest](https://github.com/scala/scala-partest)
 * [scala-swing](https://github.com/scala/scala-swing)
 * [scala-xml](https://github.com/scala/scala-xml)
 
@@ -28,8 +26,9 @@ sbt-ci-release. A release is made by pushing a tag to GitHub.
 The plugin also brings in
   - sbt-travisci to set the `scalaVersion` and `crossScalaVersions`
   - sbt-dynver to set the `version` based on the git history
-  - sbt-header
-  - sbt-osgi (only enabled when using `scalaModuleOsgiSettings`)
+  - sbt-header to automate copyright header maintenance
+  - sbt-mima-plugin to maintain binary compatibility
+  - sbt-osgi, if enabled with `scalaModuleOsgiSettings`
 
 ## Usage
 
@@ -83,7 +82,6 @@ The instructions here are a sumamry of the readme in https://github.com/olafurpg
     - Email: "scala-internals@googlegroups.com"
     - Passphrase: generate one yourself
   - Get the key `LONG_ID` from the output and set `LONG_ID=6E8ED79B03AD527F1B281169D28FC818985732D9`
-  
         pub   rsa2048 2018-06-10 [SC] [expires: 2020-06-09]
           $LONG_ID
   - Copy the public key to a key server
