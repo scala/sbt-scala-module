@@ -55,7 +55,7 @@ object ScalaModulePlugin extends AutoPlugin {
   /**
    * Enable `-opt:l:inline`, `-opt:l:project` or `-optimize`, depending on the scala version.
    */
-  lazy val enableOptimizer: Setting[_] = scalacOptions in (Compile, compile) ++= {
+  lazy val enableOptimizer: Setting[_] = Compile / compile / scalacOptions ++= {
     val Ver = """(\d+)\.(\d+)\.(\d+).*""".r
     val Ver("2", maj, min) = scalaVersion.value
     (maj.toInt, min.toInt) match {
@@ -66,7 +66,7 @@ object ScalaModulePlugin extends AutoPlugin {
   }
 
   lazy val disablePublishing: Seq[Setting[_]] = Seq(
-    skip in publish := true // works in sbt 1+
+    publish / skip := true
   )
 
   /**
@@ -78,20 +78,20 @@ object ScalaModulePlugin extends AutoPlugin {
     organization := "org.scala-lang.modules",
 
     // don't use for doc scope, scaladoc warnings are not to be reckoned with
-    scalacOptions in (Compile, compile) ++= Seq("-feature", "-deprecation", "-unchecked", "-Xlint"),
+    Compile / compile / scalacOptions ++= Seq("-feature", "-deprecation", "-unchecked", "-Xlint"),
 
     // Generate $name.properties to store our version as well as the scala version used to build
-    resourceGenerators in Compile += Def.task {
+    Compile / resourceGenerators += Def.task {
       val props = new java.util.Properties
       props.put("version.number", version.value)
       props.put("scala.version.number", scalaVersion.value)
       props.put("scala.binary.version.number", scalaBinaryVersion.value)
-      val file = (resourceManaged in Compile).value / s"${name.value}.properties"
+      val file = (Compile / resourceManaged).value / s"${name.value}.properties"
       IO.write(props, null, file)
       Seq(file)
     }.taskValue,
 
-    mappings in (Compile, packageBin) += {
+    Compile / packageBin / mappings += {
        (baseDirectory.value / s"${name.value}.properties") -> s"${name.value}.properties"
     },
 
@@ -100,7 +100,7 @@ object ScalaModulePlugin extends AutoPlugin {
     // so that scalac see classes used to run it, as classes used to compile against...
     // forking uses a minimal classpath, so this craziness is avoided
     // alternatively, manage the scala instance as shown at the end of this file (commented)
-    fork in Test := true,
+    Test / fork := true,
 
     headerLicense := Some(HeaderLicense.Custom(
       s"""|Scala (https://www.scala-lang.org)
@@ -147,7 +147,7 @@ object ScalaModulePlugin extends AutoPlugin {
     OsgiKeys.bundleVersion       := osgiVersion.value,
 
     // Sources should also have a nice MANIFEST file
-    packageOptions in packageSrc := Seq(Package.ManifestAttributes(
+    packageSrc / packageOptions := Seq(Package.ManifestAttributes(
       ("Bundle-SymbolicName", s"${organization.value}.${name.value}.source"),
       ("Bundle-Name", s"${name.value} sources"),
       ("Bundle-Version", osgiVersion.value),
@@ -197,9 +197,9 @@ object ScalaModulePlugin extends AutoPlugin {
       else Def.task { () }
     }).value,
 
-    test in Test := {
+    Test / test := {
       runMimaIfEnabled.value
-      (test in Test).value
+      (Test / test).value
     }
   )
 }
