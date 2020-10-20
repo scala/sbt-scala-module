@@ -35,7 +35,7 @@ The plugin also brings in
 Add the plugin to the `project/plugins.sbt` file:
 
 ```
-addSbtPlugin("org.scala-lang.modules" % "sbt-scala-module" % "2.2.0")
+addSbtPlugin("org.scala-lang.modules" % "sbt-scala-module" % "2.2.3")
 ```
 
 Then, in your `build.sbt` add:
@@ -95,17 +95,18 @@ The instructions here are a sumamry of the readme in https://github.com/olafurpg
     - `SONATYPE_PASSWORD`: need that one
     - `SONATYPE_USERNAME`: that one too
 
-## Cutting a new release (of this plugin)
+## Publishing a new release (of this plugin)
 
-### Release notes
+### Publishing (short version)
 
-Tag the release and add release notes to https://github.com/scala/sbt-scala-module/releases
+Create and push a tag and add the release notes. In sbt, verify that `version` picks the tag up, then run `publish` and bump the version number in the readme.
 
-### Publishing via Bintray
+### Publishing (in detail)
 
 - Sign in to Bintray (https://bintray.com/login) or create an "Open Source" account (https://bintray.com/signup/oss)
 - Check if you have a repository named `sbt-plugins`. If not, create it (Name: sbt-plugins, Type: Generic).
 - Make sure to use Java 8
+- Tag the release and add release notes to https://github.com/scala/sbt-scala-module/releases
 - Make sure the current `HEAD` is a tagged revision. In sbt, `version` (set by sbt-git) should be according to a tag.
 
       > version
@@ -122,3 +123,5 @@ Tag the release and add release notes to https://github.com/scala/sbt-scala-modu
   - Click "Send" to send the request
 
 The above instructions are a short version of https://www.scala-sbt.org/1.x/docs/Bintray-For-Plugins.html.
+
+Don't forget to bump the version number here in this readme!
