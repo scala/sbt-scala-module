@@ -9,6 +9,7 @@ This is an sbt 1.x plugin for building Scala modules.
 * [scala-collection-compat](https://github.com/scala/scala-collection-compat)
 * [scala-collection-contrib](https://github.com/scala/scala-collection-contrib)
 * [scala-java8-compat](https://github.com/scala/scala-java8-compat)
+* [scala-library-next](https://github.com/scala/scala-library-next)
 * [scala-parallel-collections](https://github.com/scala/scala-parallel-collections)
 * [scala-parser-combinators](https://github.com/scala/scala-parser-combinators)
 * [scala-swing](https://github.com/scala/scala-swing)
