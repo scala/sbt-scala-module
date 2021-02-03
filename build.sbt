@@ -2,6 +2,7 @@ enablePlugins(SbtPlugin)
 
 name                := "sbt-scala-module"
 organization        := "org.scala-lang.modules"
+homepage            := Some(url("https://github.com/scala/sbt-scala-module"))
 licenses            := Seq(("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0")))
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.6")

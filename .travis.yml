@@ -5,8 +5,21 @@ language: scala
 env:
   - ADOPTOPENJDK=8
 
-script:
-  - sbt test
+before_install:
+  - git fetch --tags
+
+stages:
+  - name: test
+  - name: release
+    if: ((branch = master AND type = push) OR (tag IS present)) AND NOT fork
+
+jobs:
+  include:
+    - stage: test
+      name: test
+      script: sbt test
+    - stage: release
+      script: sbt ci-release
 
 notifications:
   email:
