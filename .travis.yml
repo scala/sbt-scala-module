@@ -1,21 +1,13 @@
+version: ~> 1.0 # needed for imports
+import: scala/scala-dev:travis/default.yml
 language: scala
 
-jdk:
-  - openjdk8
+env:
+  - ADOPTOPENJDK=8
 
 script:
   - sbt test
 
-before_cache:
-  - find $HOME/.sbt -name "*.lock" | xargs rm
-  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
-cache:
-  directories:
-  - $HOME/.ivy2
-  - $HOME/.sbt/boot
-  - $HOME/.sbt/launchers
-
 notifications:
   email:
-  - adriaan.moors@lightbend.com
   - seth.tisue@lightbend.com
