@@ -77,7 +77,8 @@ The following settings are also available:
 
 ## Set up tag-based publishing
 
-The instructions here are a sumamry of the readme in https://github.com/olafurpg/sbt-ci-release
+The instructions here are a summary of the readme in https://github.com/olafurpg/sbt-ci-release
+
   - Create a fresh GPG key: `gpg --gen-key`
     - Real name: use "project-name bot"
     - Email: "scala-internals@googlegroups.com"
@@ -95,34 +96,3 @@ The instructions here are a sumamry of the readme in https://github.com/olafurpg
       - ubuntu: `gpg --armor --export-secret-keys $LONG_ID | base64 -w0`
     - `SONATYPE_PASSWORD`: need that one
     - `SONATYPE_USERNAME`: that one too
-
-## Publishing a new release (of this plugin)
-
-### Publishing (short version)
-
-Create and push a tag and add the release notes. In sbt, verify that `version` picks the tag up, then run `publish` and bump the version number in the readme.
-
-### Publishing (in detail)
-
-- Sign in to Bintray (https://bintray.com/login) or create an "Open Source" account (https://bintray.com/signup/oss)
-- Check if you have a repository named `sbt-plugins`. If not, create it (Name: sbt-plugins, Type: Generic).
-- Make sure to use Java 8
-- Tag the release and add release notes to https://github.com/scala/sbt-scala-module/releases
-- Make sure the current `HEAD` is a tagged revision. In sbt, `version` (set by sbt-git) should be according to a tag.
-
-      > version
-      [info] 2.3.4
-
-- Run `publish` in sbt. If you don't have a `~/.bintray/.credentials` file, the sbt-bintray plugin will ask you for your
-  username and API key. The API key can be obtained under "Edit Profile" (https://bintray.com/profile/edit). The sbt-bintray
-  plugin saves credentials to `~/.bintray/.credentials` for future use.
-- If you haven't done so before, add your package for this plugin (https://bintray.com/YOUR_USERNAME/sbt-plugins/sbt-scala-module)
-  to the community sbt repository (https://bintray.com/sbt/sbt-plugin-releases). Otherwise you're done, the release is available.
-  - Check if you added your package by searching for "sbt-scala-module" in the repository.
-  - If you cannot find your package, click "Include My Package"
-  - Search for your plugin (`sbt-scala-module`)
-  - Click "Send" to send the request
-
-The above instructions are a short version of https://www.scala-sbt.org/1.x/docs/Bintray-For-Plugins.html.
-
-Don't forget to bump the version number here in this readme!
