@@ -81,11 +81,12 @@ The instructions here are a summary of the readme in https://github.com/olafurpg
 
   - Create a fresh GPG key: `gpg --gen-key`
     - Real name: use "project-name bot"
-    - Email: "scala-internals@googlegroups.com"
+    - Email: "something@scala-lang.org"
     - Passphrase: generate one yourself
-  - Get the key `LONG_ID` from the output and set `LONG_ID=6E8ED79B03AD527F1B281169D28FC818985732D9`
+  - Get the key `LONG_ID` from the output and set `LONG_ID=6E8ED79B03AD527F1B281169D28FC818985732D9`. The output looks like this:
+
         pub   rsa2048 2018-06-10 [SC] [expires: 2020-06-09]
-          $LONG_ID
+              $LONG_ID
   - Copy the public key to a key server
     - `gpg --armor --export $LONG_ID`
     - http://keyserver.ubuntu.com:11371/
