@@ -16,6 +16,7 @@ import xerial.sbt.Sonatype.autoImport.{sonatypeProfileName, sonatypeSessionName}
 object ScalaModulePlugin extends AutoPlugin {
   object autoImport {
     val scalaModuleRepoName = settingKey[String]("The name of the repository under github.com/scala/.")
+    val scalaModuleAutomaticModuleName = settingKey[Option[String]]("Automatic-Module-Name setting for manifest")
     val scalaModuleMimaPreviousVersion = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
     val scalaModuleEnableOptimizerInlineFrom = settingKey[String]("The value passed to -opt-inline-from by `enableOptimizer` on 2.13 and higher.")
   }
@@ -90,6 +91,14 @@ object ScalaModulePlugin extends AutoPlugin {
       IO.write(props, null, file)
       Seq(file)
     }.taskValue,
+
+    // note that scalaModuleAutomaticModuleName has no default value, forcing
+    // clients of this plugin to explicitly set it
+    Compile / packageBin / packageOptions ++=
+      (scalaModuleAutomaticModuleName.value match {
+        case Some(name) => Seq(Package.ManifestAttributes("Automatic-Module-Name" -> name))
+        case None       => Seq()
+      }),
 
     Compile / packageBin / mappings += {
        (baseDirectory.value / s"${name.value}.properties") -> s"${name.value}.properties"
