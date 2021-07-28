@@ -1,22 +1,19 @@
 package com.lightbend.tools.scalamoduleplugin
 
 import com.typesafe.sbt.osgi.{OsgiKeys, SbtOsgi}
-import com.typesafe.tools.mima.plugin.MimaKeys._
-import com.typesafe.tools.mima.plugin.MimaPlugin
 import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{HeaderLicense, headerLicense}
 import sbt.Keys._
-import sbt._
-import sbt.internal.librarymanagement.IvySbt
-import sbt.librarymanagement.ivy.IvyDependencyResolution
-import sbt.librarymanagement.{UnresolvedWarningConfiguration, UpdateConfiguration}
+import sbt.{Def, _}
 import sbtdynver.DynVerPlugin
 import sbtdynver.DynVerPlugin.autoImport.dynverGitDescribeOutput
 import xerial.sbt.Sonatype.autoImport.{sonatypeProfileName, sonatypeSessionName}
+import sbtversionpolicy.SbtVersionPolicyPlugin.autoImport.{Compatibility, versionPolicyCheck, versionPolicyIgnoredInternalDependencyVersions, versionPolicyIntention}
 
 object ScalaModulePlugin extends AutoPlugin {
   object autoImport {
     val scalaModuleRepoName = settingKey[String]("The name of the repository under github.com/scala/.")
     val scalaModuleAutomaticModuleName = settingKey[Option[String]]("Automatic-Module-Name setting for manifest")
+    @deprecated("Previous version is now automatically computed by sbt-version-policy. Setting this key has no effect", "2.4.0")
     val scalaModuleMimaPreviousVersion = settingKey[Option[String]]("The version of this module to compare against when running MiMa.")
     val scalaModuleEnableOptimizerInlineFrom = settingKey[String]("The value passed to -opt-inline-from by `enableOptimizer` on 2.13 and higher.")
   }
@@ -36,7 +33,7 @@ object ScalaModulePlugin extends AutoPlugin {
       dv.copy(ref = sbtdynver.GitRef(dv.ref.value.split('#').head)))),
   )
 
-  // Settings added to the global scope
+  // Settings added to the project scope
   override def projectSettings: Seq[Setting[_]] = Seq(
     // The staging profile is called `org.scala-lang`, the default is `org.scala-lang.modules`
     sonatypeProfileName := "org.scala-lang",
@@ -51,6 +48,12 @@ object ScalaModulePlugin extends AutoPlugin {
       val jobNr = Option(System.getenv("TRAVIS_JOB_NUMBER")).filter(_.nonEmpty).map(v => s" (travis #$v)").getOrElse("")
       s"${sonatypeSessionName.value} Scala ${scalaVersion.value}$sjs$native$jobNr"
     },
+  )
+
+  // Global settings
+  override def globalSettings: Seq[Def.Setting[_]] = Seq(
+    // Since we use sbt-dynver, see https://github.com/scalacenter/sbt-version-policy#how-to-integrate-with-sbt-dynver
+    versionPolicyIgnoredInternalDependencyVersions := Some("^\\d+\\.\\d+\\.\\d+\\+\\d+".r)
   )
 
   /**
@@ -167,47 +170,21 @@ object ScalaModulePlugin extends AutoPlugin {
   // a setting-transform to turn the regular version into something osgi can deal with
   private val osgiVersion = version(_.replace('-', '.'))
 
-  // adapted from https://github.com/lightbend/migration-manager/blob/0.3.0/sbtplugin/src/main/scala/com/typesafe/tools/mima/plugin/SbtMima.scala#L112
-  private def artifactExists(organization: String, name: String, scalaBinaryVersion: String, version: String, ivy: IvySbt, s: TaskStreams): Boolean = {
-    val moduleId = ModuleID(organization, s"${name}_$scalaBinaryVersion", version)
-    val depRes = IvyDependencyResolution(ivy.configuration)
-    val module = depRes.wrapDependencyInModule(moduleId)
-    val updateConf = UpdateConfiguration() withLogging UpdateLogging.DownloadOnly
-    val reportEither = depRes.update(module, updateConf, UnresolvedWarningConfiguration(), s.log)
-    reportEither.fold(_ => false, _ => true)
-  }
-
-  // Internal task keys for the MiMa settings
-  private val canRunMima       = taskKey[Boolean]("Decides if MiMa should run.")
-  private val runMimaIfEnabled = taskKey[Unit]("Run MiMa if mimaPreviousVersion and the module can be resolved against the current scalaBinaryVersion.")
+  // Internal task keys for the versionPolicy settings
+  private val runVersionPolicyCheckIfEnabled = taskKey[Unit]("Run versionPolicyCheck if versionPolicyIntention is not set to Compatibility.None.")
 
   private lazy val mimaSettings: Seq[Setting[_]] = Seq(
-    scalaModuleMimaPreviousVersion := None,
+    versionPolicyIntention := Compatibility.None,
 
-    // We're not using `%%` here in order to support both jvm and js projects (cross version `_2.12` / `_sjs0.6_2.12`)
-    mimaPreviousArtifacts := scalaModuleMimaPreviousVersion.value.map(v => organization.value % moduleName.value % v cross crossVersion.value).toSet,
-
-    canRunMima := {
-      val log = streams.value.log
-      scalaModuleMimaPreviousVersion.value match {
-        case None =>
-          log.warn("MiMa will NOT run because no mimaPreviousVersion is provided.")
-          false
-        case Some(mimaVer) =>
-          val exists = artifactExists(organization.value, name.value, scalaBinaryVersion.value, mimaVer, ivySbt.value, streams.value)
-          if (!exists)
-            log.warn(s"""MiMa will NOT run because the previous artifact "${organization.value}" % "${name.value}_${scalaBinaryVersion.value}" % "$mimaVer" could not be resolved (note the binary Scala version).""")
-          exists
+    runVersionPolicyCheckIfEnabled := Def.taskDyn({
+      if (versionPolicyIntention.value != Compatibility.None) Def.task { versionPolicyCheck.value }
+      else Def.task {
+        streams.value.log.warn("versionPolicyCheck will NOT run because versionPolicyIntention is set to Compatibility.None.")
       }
-    },
-
-    runMimaIfEnabled := Def.taskDyn({
-      if (canRunMima.value) Def.task { mimaReportBinaryIssues.value }
-      else Def.task { () }
     }).value,
 
     Test / test := {
-      runMimaIfEnabled.value
+      runVersionPolicyCheckIfEnabled.value
       (Test / test).value
     }
   )

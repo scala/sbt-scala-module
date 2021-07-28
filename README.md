@@ -30,6 +30,7 @@ The plugin also brings in
   - sbt-header to automate copyright header maintenance
   - sbt-mima-plugin to maintain binary compatibility
   - sbt-osgi, if enabled with `scalaModuleOsgiSettings`
+  - sbt-version-policy to check the versioning policy
 
 ## Usage
 
@@ -53,7 +54,7 @@ name         := "<module name>"
 repoName     := "<GitHub repo name>" // the repo under github.com/scala/, only required if different from name
 organization := "<org>"              // only required if different from "org.scala-lang.modules"
 
-scalaModuleMimaPreviousVersion := Some("1.0.0") // enables MiMa (`None` by default, which disables it)
+versionPolicyIntention := Compatibility.BinaryAndSourceCompatible // enables MiMa (`Compatibility.None` by default, which disables it)
 
 OsgiKeys.exportPackage := Seq(s"<exported package>;version=${version.value}")
 
@@ -77,7 +78,7 @@ The following settings are also available:
 
 ## Set up tag-based publishing
 
-The instructions here are a summary of the readme in https://github.com/olafurpg/sbt-ci-release
+The instructions here are a summary of the readme in https://github.com/olafurpg/sbt-ci-release and https://github.com/scalacenter/sbt-version-policy
 
   - Create a fresh GPG key: `gpg --gen-key`
     - Real name: use "project-name bot"
@@ -97,3 +98,5 @@ The instructions here are a summary of the readme in https://github.com/olafurpg
       - ubuntu: `gpg --armor --export-secret-keys $LONG_ID | base64 -w0`
     - `SONATYPE_PASSWORD`: need that one
     - `SONATYPE_USERNAME`: that one too
+
+  - Run `versionCheck` in the publishing process: `sbt versionCheck ci-release`
