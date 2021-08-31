@@ -74,7 +74,6 @@ These additional settings are enabled by `scalaModuleSettings`:
 The following settings are also available:
   - `enableOptimizer` adds `-opt-inline-from:<sources>` or `-opt:l:project` or `-optimize` to `scalacOptions in (Compile, compile)`,
     depending on the Scala version
-  - `disablePublishing` is useful for multi-project builds for projects that should not be published
 
 ## Set up tag-based publishing
 

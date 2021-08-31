@@ -69,10 +69,6 @@ object ScalaModulePlugin extends AutoPlugin {
     }
   }
 
-  lazy val disablePublishing: Seq[Setting[_]] = Seq(
-    publish / skip := true
-  )
-
   /**
    * To be included in the main sbt project of a Scala module.
    */
