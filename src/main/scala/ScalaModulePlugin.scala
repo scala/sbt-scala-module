@@ -37,17 +37,6 @@ object ScalaModulePlugin extends AutoPlugin {
   override def projectSettings: Seq[Setting[_]] = Seq(
     // The staging profile is called `org.scala-lang`, the default is `org.scala-lang.modules`
     sonatypeProfileName := "org.scala-lang",
-
-    // The staging repository name. The default is `[sbt-sonatype] name version`. We include the
-    // Scala/Scala.js/Scala Native versions and the travis job number to avoid conflicts when
-    // running the travis jobs. Example: collection-compat has a two 2.12.x jobs, one for the
-    // compat library, one for the migration rules, and both were writing to the same staging repo.
-    sonatypeSessionName := {
-      val sjs = Option(System.getenv("SCALAJS_VERSION")).filter(_.nonEmpty).map(v => s" (js $v)").getOrElse("")
-      val native = Option(System.getenv("SCALANATIVE_VERSION")).filter(_.nonEmpty).map(v => s" (native $v)").getOrElse("")
-      val jobNr = Option(System.getenv("TRAVIS_JOB_NUMBER")).filter(_.nonEmpty).map(v => s" (travis #$v)").getOrElse("")
-      s"${sonatypeSessionName.value} Scala ${scalaVersion.value}$sjs$native$jobNr"
-    },
   )
 
   // Global settings
@@ -68,10 +57,6 @@ object ScalaModulePlugin extends AutoPlugin {
       case _                => Seq("-opt:l:inline", "-opt-inline-from:" + scalaModuleEnableOptimizerInlineFrom.value)
     }
   }
-
-  lazy val disablePublishing: Seq[Setting[_]] = Seq(
-    publish / skip := true
-  )
 
   /**
    * To be included in the main sbt project of a Scala module.
