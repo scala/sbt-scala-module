@@ -67,7 +67,13 @@ object ScalaModulePlugin extends AutoPlugin {
     organization := "org.scala-lang.modules",
 
     // don't use for doc scope, scaladoc warnings are not to be reckoned with
-    Compile / compile / scalacOptions ++= Seq("-feature", "-deprecation", "-unchecked", "-Xlint"),
+    Compile / compile / scalacOptions ++= Seq("-feature", "-deprecation", "-unchecked"),
+    Compile / compile / scalacOptions ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, _)) => Seq("-Xlint")
+        case _ => Seq.empty
+      }
+    },
 
     // Generate $name.properties to store our version as well as the scala version used to build
     Compile / resourceGenerators += Def.task {
