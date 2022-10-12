@@ -50,11 +50,12 @@ object ScalaModulePlugin extends AutoPlugin {
    */
   lazy val enableOptimizer: Setting[_] = Compile / compile / scalacOptions ++= {
     val Ver = """(\d+)\.(\d+)\.(\d+).*""".r
-    val Ver("2", maj, min) = scalaVersion.value
-    (maj.toInt, min.toInt) match {
-      case (m, _) if m < 12 => Seq("-optimize")
-      case (12, n) if n < 3 => Seq("-opt:l:project")
-      case _                => Seq("-opt:l:inline", "-opt-inline-from:" + scalaModuleEnableOptimizerInlineFrom.value)
+    val Ver(epic, maj, min) = scalaVersion.value
+    (epic, maj.toInt, min.toInt) match {
+      case ("2", m, _) if m < 12 => Seq("-optimize")
+      case ("2", 12, n) if n < 3 => Seq("-opt:l:project")
+      case ("2", _, _)           => Seq("-opt:l:inline", "-opt-inline-from:" + scalaModuleEnableOptimizerInlineFrom.value)
+      case ("3", _, _)           => Nil // Optimizer not yet available for Scala3, see https://docs.scala-lang.org/overviews/compiler-options/optimizer.html
     }
   }
 
