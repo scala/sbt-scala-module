@@ -4,15 +4,29 @@ This is an sbt 1.x plugin for building Scala modules.
 
 ## What modules use it?
 
-* [scala-async](https://github.com/scala/scala-async)
-* [scala-collection-compat](https://github.com/scala/scala-collection-compat)
-* [scala-collection-contrib](https://github.com/scala/scala-collection-contrib)
-* [scala-java8-compat](https://github.com/scala/scala-java8-compat)
-* [scala-library-next](https://github.com/scala/scala-library-next)
-* [scala-parallel-collections](https://github.com/scala/scala-parallel-collections)
+### Former standard library
+
 * [scala-parser-combinators](https://github.com/scala/scala-parser-combinators)
 * [scala-swing](https://github.com/scala/scala-swing)
 * [scala-xml](https://github.com/scala/scala-xml)
+
+For historical reasons, these were originally part of the Scala standard library. They live on as modules since they are in the `scala.` namespace and keeping them there preserves source compatibility with old source code that uses them. They are now community-maintained and largely frozen in design, though still open to minor improvements.
+
+### Standard library adjacent
+
+* [scala-async](https://github.com/scala/scala-async)
+* [scala-collection-compat](https://github.com/scala/scala-collection-compat)
+* [scala-java8-compat](https://github.com/scala/scala-java8-compat)
+* [scala-parallel-collections](https://github.com/scala/scala-parallel-collections)
+
+These modules are maintained by the Scala organization, with community input and participation. They have an especially close relationship with the Scala standard library (or, in the case of scala-async, the Scala 2 compiler).
+
+### Future standard library?
+
+* [scala-library-next](https://github.com/scala/scala-library-next)
+* [scala-collection-contrib](https://github.com/scala/scala-collection-contrib)
+
+Code that could become part of the standard library in the future.
 
 ## Why this plugin?
 
