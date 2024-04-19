@@ -49,14 +49,19 @@ object ScalaModulePlugin extends AutoPlugin {
    * Enable `-opt:l:inline`, `-opt:l:project` or `-optimize`, depending on the scala version.
    */
   lazy val enableOptimizer: Setting[_] = Compile / compile / scalacOptions ++= {
-    val Ver = """(\d+)\.(\d+)\.(\d+).*""".r
-    val Ver(epic, maj, min) = scalaVersion.value
-    (epic, maj.toInt, min.toInt) match {
-      case ("2", m, _) if m < 12 => Seq("-optimize")
-      case ("2", 12, n) if n < 3 => Seq("-opt:l:project")
-      case ("2", _, _)           => Seq("-opt:l:inline", "-opt-inline-from:" + scalaModuleEnableOptimizerInlineFrom.value)
-      case ("3", _, _)           => Nil // Optimizer not yet available for Scala3, see https://docs.scala-lang.org/overviews/compiler-options/optimizer.html
-    }
+    if (insideCI.value) {
+      val log = sLog.value
+      val inlineFrom = scalaModuleEnableOptimizerInlineFrom.value
+      log.info(s"Running in CI, enabling Scala2 optimizer for module: ${name.value} with -opt-inline-from: $inlineFrom")
+      val Ver = """(\d+)\.(\d+)\.(\d+).*""".r
+      val Ver(epic, maj, min) = scalaVersion.value
+      (epic, maj.toInt, min.toInt) match {
+        case ("2", m, _) if m < 12 => Seq("-optimize")
+        case ("2", 12, n) if n < 3 => Seq("-opt:l:project")
+        case ("2", _, _)           => Seq("-opt:l:inline", "-opt-inline-from:" + inlineFrom)
+        case ("3", _, _)           => Nil // Optimizer not yet available for Scala3, see https://docs.scala-lang.org/overviews/compiler-options/optimizer.html
+      }
+    } else Nil
   }
 
   /**
