@@ -46,7 +46,11 @@ object ScalaModulePlugin extends AutoPlugin {
   )
 
   /**
-   * Enable `-opt:l:inline`, `-opt:l:project` or `-optimize`, depending on the scala version.
+   * Enable `-opt:l:inline`, `-opt:l:project` or `-optimize`, depending on the Scala version.
+   *
+   * Note that the optimizer is only enabled in CI and not during local development.
+   * Thus, for consistent results, release artifacts must only be built on CI --
+   * which is the expected norm for Scala modules, anyway.
    */
   lazy val enableOptimizer: Setting[_] = Compile / compile / scalacOptions ++= {
     if (insideCI.value) {
