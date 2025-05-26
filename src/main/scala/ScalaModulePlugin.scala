@@ -1,6 +1,6 @@
 package com.lightbend.tools.scalamoduleplugin
 
-import com.typesafe.sbt.osgi.{OsgiKeys, SbtOsgi}
+import com.github.sbt.osgi.{OsgiKeys, SbtOsgi}
 import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport.{HeaderLicense, headerLicense}
 import sbt.Keys._
 import sbt.{Def, _}
