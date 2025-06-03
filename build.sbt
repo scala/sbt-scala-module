@@ -9,5 +9,5 @@ developers          := List(Developer("", "", "", url("https://scala-lang.org"))
 
 addSbtPlugin("com.github.sbt" % "sbt-osgi" % "0.10.0")
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "5.10.0")
-addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.9.3") // set version, scmInfo, publishing settings
+addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.11.1") // set version, scmInfo, publishing settings
 addSbtPlugin("ch.epfl.scala" % "sbt-version-policy" % "3.2.1")  // brings in MiMa
