@@ -6,7 +6,6 @@ import sbt.Keys._
 import sbt.{Def, _}
 import sbtdynver.DynVerPlugin
 import sbtdynver.DynVerPlugin.autoImport.dynverGitDescribeOutput
-import xerial.sbt.Sonatype.autoImport.{sonatypeProfileName, sonatypeSessionName}
 import sbtversionpolicy.SbtVersionPolicyPlugin.autoImport.{Compatibility, versionPolicyCheck, versionPolicyIgnoredInternalDependencyVersions, versionPolicyIntention}
 
 object ScalaModulePlugin extends AutoPlugin {
@@ -34,10 +33,7 @@ object ScalaModulePlugin extends AutoPlugin {
   )
 
   // Settings added to the project scope
-  override def projectSettings: Seq[Setting[_]] = Seq(
-    // The staging profile is called `org.scala-lang`, the default is `org.scala-lang.modules`
-    sonatypeProfileName := "org.scala-lang",
-  )
+  override def projectSettings: Seq[Setting[_]] = Seq()
 
   // Global settings
   override def globalSettings: Seq[Def.Setting[_]] = Seq(
