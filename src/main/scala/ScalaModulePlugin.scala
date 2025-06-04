@@ -141,7 +141,7 @@ object ScalaModulePlugin extends AutoPlugin {
         </developer>
         <developer>
           <id>Akka</id>
-          <name>Akka</name>
+          <name>Lightbend, Inc. dba Akka</name>
         </developer>
       </developers>
     )
