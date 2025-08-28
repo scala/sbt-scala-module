@@ -24,7 +24,7 @@ object ScalaModulePlugin extends AutoPlugin {
   override def trigger = allRequirements
 
   // Settings in here are implicitly `in ThisBuild`
-  override def buildSettings: Seq[Setting[_]] = Seq(
+  override def buildSettings: Seq[Setting[?]] = Seq(
     scalaModuleEnableOptimizerInlineFrom := "<sources>",
 
     // drop # suffix from tags
@@ -33,10 +33,10 @@ object ScalaModulePlugin extends AutoPlugin {
   )
 
   // Settings added to the project scope
-  override def projectSettings: Seq[Setting[_]] = Seq()
+  override def projectSettings: Seq[Setting[?]] = Seq()
 
   // Global settings
-  override def globalSettings: Seq[Def.Setting[_]] = Seq(
+  override def globalSettings: Seq[Def.Setting[?]] = Seq(
     // Since we use sbt-dynver, see https://github.com/scalacenter/sbt-version-policy#how-to-integrate-with-sbt-dynver
     versionPolicyIgnoredInternalDependencyVersions := Some("^\\d+\\.\\d+\\.\\d+\\+\\d+".r)
   )
@@ -48,7 +48,7 @@ object ScalaModulePlugin extends AutoPlugin {
    * Thus, for consistent results, release artifacts must only be built on CI --
    * which is the expected norm for Scala modules, anyway.
    */
-  lazy val enableOptimizer: Setting[_] = Compile / compile / scalacOptions ++= {
+  lazy val enableOptimizer: Setting[?] = Compile / compile / scalacOptions ++= {
     if (insideCI.value) {
       val log = sLog.value
       val inlineFrom = scalaModuleEnableOptimizerInlineFrom.value
@@ -67,7 +67,7 @@ object ScalaModulePlugin extends AutoPlugin {
   /**
    * To be included in the main sbt project of a Scala module.
    */
-  lazy val scalaModuleSettings: Seq[Setting[_]] = Seq(
+  lazy val scalaModuleSettings: Seq[Setting[?]] = Seq(
     scalaModuleRepoName := name.value,
 
     organization := "org.scala-lang.modules",
@@ -148,10 +148,10 @@ object ScalaModulePlugin extends AutoPlugin {
   ) ++ mimaSettings
 
   @deprecated("use scalaModuleOsgiSettings instead", "2.2.0")
-  lazy val scalaModuleSettingsJVM: Seq[Setting[_]] = scalaModuleOsgiSettings
+  lazy val scalaModuleSettingsJVM: Seq[Setting[?]] = scalaModuleOsgiSettings
 
   // enables the SbtOsgi plugin and defines some default settings
-  lazy val scalaModuleOsgiSettings: Seq[Setting[_]] = SbtOsgi.projectSettings ++ SbtOsgi.autoImport.osgiSettings ++ Seq(
+  lazy val scalaModuleOsgiSettings: Seq[Setting[?]] = SbtOsgi.projectSettings ++ SbtOsgi.autoImport.osgiSettings ++ Seq(
     OsgiKeys.bundleSymbolicName  := s"${organization.value}.${name.value}",
     OsgiKeys.bundleVersion       := osgiVersion.value,
 
@@ -170,7 +170,7 @@ object ScalaModulePlugin extends AutoPlugin {
   // Internal task keys for the versionPolicy settings
   private val runVersionPolicyCheckIfEnabled = taskKey[Unit]("Run versionPolicyCheck if versionPolicyIntention is not set to Compatibility.None.")
 
-  private lazy val mimaSettings: Seq[Setting[_]] = Seq(
+  private lazy val mimaSettings: Seq[Setting[?]] = Seq(
     versionPolicyIntention := Compatibility.None,
 
     runVersionPolicyCheckIfEnabled := Def.taskDyn({
