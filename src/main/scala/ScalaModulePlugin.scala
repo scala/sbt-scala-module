@@ -96,7 +96,9 @@ object ScalaModulePlugin extends AutoPlugin {
       }),
 
     Compile / packageBin / mappings += {
-       (baseDirectory.value / s"${name.value}.properties") -> s"${name.value}.properties"
+      val conv = fileConverter.value
+      val file = baseDirectory.value / s"${name.value}.properties"
+      conv.toVirtualFile(file.toPath) -> s"${name.value}.properties"
     },
 
     // needed to fix classloader issues (see scala/scala-xml#20)
@@ -121,7 +123,7 @@ object ScalaModulePlugin extends AutoPlugin {
     scmInfo              := Some(ScmInfo(url(s"https://github.com/scala/${scalaModuleRepoName.value}"),s"scm:git:git://github.com/scala/${scalaModuleRepoName.value}.git")),
     homepage             := Some(url("http://www.scala-lang.org/")),
     organizationHomepage := Some(url("http://www.scala-lang.org/")),
-    licenses             := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
+    licenses             := Seq(sbt.librarymanagement.License.Apache2),
     startYear            := Some(2002),
     pomIncludeRepository := { _ => false },
     pomExtra := (
@@ -177,7 +179,7 @@ object ScalaModulePlugin extends AutoPlugin {
 
     Test / test := {
       runVersionPolicyCheckIfEnabled.value
-      (Test / test).value
+      (Test / test).evaluated
     }
   )
 }

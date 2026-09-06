@@ -1,6 +1,6 @@
 # Scala modules sbt plugin
 
-This is an sbt 1.x plugin for building Scala modules.
+This is an sbt 2.x plugin for building Scala modules.
 
 ## What modules use it?
 
